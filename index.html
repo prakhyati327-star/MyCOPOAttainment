@@ -1,0 +1,2403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CO Attainment Portal – GPG Surat IT Dept</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD6AE4oCopxzTVALTY2QXhgPrWGtrC3BtI",
+  authDomain: "mycopoattainment.firebaseapp.com",
+  projectId: "mycopoattainment",
+  storageBucket: "mycopoattainment.firebasestorage.app",
+  messagingSenderId: "522608834312",
+  appId: "1:522608834312:web:dd00dfca0f7a14f5d69ebd",
+  measurementId: "G-VSL1E87V3H"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+</script>
+
+<style>
+:root {
+  --navy:#0f1f3d; --navy2:#162847;
+  --teal:#0ea5a0; --teal2:#14c4be;
+  --amber:#f59e0b; --red:#ef4444; --green:#22c55e;
+  --bg:#f0f4f8; --card:#ffffff; --text:#1e293b;
+  --muted:#64748b; --border:#e2e8f0; --sw:240px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── TOAST ── */
+#toast{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-msg{background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;transform:translateX(20px);transition:all .3s;pointer-events:none;max-width:320px;border-left:3px solid var(--teal)}
+.toast-msg.show{opacity:1;transform:translateX(0)}
+.toast-msg.error{border-left-color:var(--red)}
+.toast-msg.success{border-left-color:var(--green)}
+
+.spinner{width:24px;height:24px;border:3px solid rgba(14,165,160,.2);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── LOGIN ── */
+#loginScreen{display:none;min-height:100vh;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--navy) 0%,#1a3a6b 50%,#0d3344 100%);position:relative;overflow:hidden}
+#loginScreen::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 30% 20%,rgba(14,165,160,.18) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 80%,rgba(245,158,11,.1) 0%,transparent 50%)}
+.lcard{background:rgba(255,255,255,.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:48px 44px;width:420px;position:relative;z-index:1;box-shadow:0 32px 80px rgba(0,0,0,.4)}
+.llogo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.llogo-icon{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--teal),var(--teal2));
+  display:flex;align-items:center;justify-content:center;font-size:22px}
+.llogo-text h2{font-family:'DM Serif Display',serif;font-size:18px;color:#fff;line-height:1.2}
+.llogo-text p{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}
+.lcard h1{font-family:'DM Serif Display',serif;color:#fff;font-size:26px;margin-bottom:6px}
+.lcard .lsub{color:rgba(255,255,255,.45);font-size:13px;margin-bottom:32px}
+.fg{margin-bottom:20px}
+.fg label{display:block;color:rgba(255,255,255,.6);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.fg input,.fg select{width:100%;padding:11px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.07);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus{border-color:var(--teal)}
+.fg input::placeholder{color:rgba(255,255,255,.3)}
+.fg select option{background:#1e3a5f;color:#fff}
+.lbtn{width:100%;padding:13px;border-radius:9px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;
+  font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
+  transition:transform .15s,box-shadow .15s;box-shadow:0 4px 20px rgba(14,165,160,.35)}
+.lbtn:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(14,165,160,.5)}
+.lbtn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.lerr{color:#fca5a5;font-size:13px;text-align:center;margin-top:12px;min-height:20px}
+.ltabs{display:flex;gap:0;margin-bottom:28px;border-radius:9px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+.ltab{flex:1;padding:10px;background:transparent;border:none;cursor:pointer;color:rgba(255,255,255,.5);
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:all .2s}
+.ltab.active{background:rgba(255,255,255,.1);color:#fff}
+.lhint{color:rgba(255,255,255,.3);font-size:11px;text-align:center;margin-top:16px}
+
+/* ── MAIN APP ── */
+#mainApp{display:none;min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sw);background:var(--navy);
+  display:flex;flex-direction:column;z-index:100}
+.sb-head{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-head h2{font-family:'DM Serif Display',serif;color:#fff;font-size:16px}
+.sb-head p{color:rgba(255,255,255,.35);font-size:11px;margin-top:2px}
+.sb-nav{padding:16px 12px;flex:1;overflow-y:auto}
+.nav-sec-lbl{color:rgba(255,255,255,.3);font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;padding:0 8px;margin-bottom:6px;margin-top:16px}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;
+  color:rgba(255,255,255,.55);font-size:13.5px;transition:all .15s;margin-bottom:2px}
+.ni:hover{background:rgba(255,255,255,.06);color:#fff}
+.ni.active{background:rgba(14,165,160,.2);color:var(--teal2);font-weight:500}
+.ni .ic{font-size:16px;width:20px;text-align:center}
+.sb-user{padding:14px 20px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--teal),#0d7a76);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:14px;flex-shrink:0}
+.ui p{color:#fff;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+.ui span{color:rgba(255,255,255,.35);font-size:11px}
+.logout-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);font-size:18px;transition:color .15s;flex-shrink:0}
+.logout-btn:hover{color:var(--red)}
+
+/* ── CONTENT ── */
+.main-content{margin-left:var(--sw);padding:28px 32px;min-height:100vh}
+.page{display:none}
+.page.active{display:block}
+.ph{margin-bottom:26px}
+.ph h1{font-family:'DM Serif Display',serif;font-size:28px;color:var(--navy)}
+.ph p{color:var(--muted);font-size:14px;margin-top:4px}
+
+/* ── CARDS ── */
+.card{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:22px}
+.card-title{font-weight:600;font-size:14px;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);flex-shrink:0}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+.stat-card{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:18px 20px}
+.stat-card .sl{font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.stat-card .sv{font-family:'DM Serif Display',serif;font-size:30px;color:var(--navy)}
+.stat-card .ss{font-size:12px;color:var(--teal)}
+.stat-card.dark{background:linear-gradient(135deg,var(--navy),var(--navy2));border-color:transparent}
+.stat-card.dark .sl{color:rgba(255,255,255,.45)}
+.stat-card.dark .sv{color:#fff}
+.stat-card.dark .ss{color:var(--teal2)}
+
+/* ── TABLES ── */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{background:#f8fafc;padding:9px 13px;text-align:left;font-weight:600;font-size:11px;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+td{padding:10px 13px;border-bottom:1px solid #f1f5f9;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge.h{background:#dcfce7;color:#166534}
+.badge.m{background:#fef9c3;color:#854d0e}
+.badge.l{background:#fee2e2;color:#991b1b}
+.badge.b{background:#dbeafe;color:#1e40af}
+.badge.g{background:#f3f4f6;color:#374151}
+
+/* ── BARS ── */
+.co-bar{margin-bottom:13px}
+.co-bar-h{display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px}
+.co-bar-h span:first-child{font-weight:500}
+.co-bar-track{height:9px;background:#e2e8f0;border-radius:99px;overflow:hidden}
+.co-bar-fill{height:100%;border-radius:99px;transition:width .8s ease}
+.bh{background:linear-gradient(90deg,var(--teal),var(--teal2))}
+.bm{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.bl{background:linear-gradient(90deg,#ef4444,#f87171)}
+
+/* ── FORM ── */
+.inp{width:100%;padding:10px 13px;border-radius:8px;border:1px solid var(--border);
+  background:#fff;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--teal)}
+.inp-lbl{display:block;font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.ff{margin-bottom:15px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:15px}
+.btn{padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;transition:all .15s}
+.bt{background:var(--teal);color:#fff}
+.bt:hover{background:var(--teal2)}
+.bo{background:#fff;color:var(--text);border:1px solid var(--border)}
+.bo:hover{background:#f8fafc}
+.bs{padding:6px 13px;font-size:12.5px}
+.bd{background:#fee2e2;color:var(--red)}
+.bd:hover{background:#fecaca}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── HEATMAP ── */
+.hm td,.hm th{padding:8px 10px;text-align:center;font-size:12px;border:1px solid var(--border)}
+.hm th{background:#f8fafc;font-weight:600}
+.h0{background:#f1f5f9;color:var(--muted)}
+.h1{background:#fef9c3;color:#854d0e;font-weight:600}
+.h2{background:#bfdbfe;color:#1d4ed8;font-weight:600}
+.h3{background:#bbf7d0;color:#166534;font-weight:600}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:20px}
+.tab{flex:1;padding:8px 10px;border-radius:7px;border:none;background:transparent;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);transition:all .15s;text-align:center}
+.tab.active{background:#fff;color:var(--navy);box-shadow:0 1px 6px rgba(0,0,0,.08)}
+
+/* ── MODAL ── */
+.mo{display:none;position:fixed;inset:0;background:rgba(15,31,61,.55);backdrop-filter:blur(4px);z-index:999;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.mc{background:#fff;border-radius:18px;padding:30px;width:520px;max-height:85vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.2)}
+.mc h2{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:4px}
+.mc .msub{color:var(--muted);font-size:13px;margin-bottom:22px}
+.ma{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* ── PILL ── */
+.pill{display:inline-flex;align-items:center;gap:4px;background:#f0faf9;color:var(--teal);
+  border:1px solid #b2e8e6;border-radius:20px;padding:3px 9px;font-size:12px;font-weight:500;margin:2px}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.gap16{gap:16px}
+.mb20{margin-bottom:20px}
+
+/* ── ALERT ── */
+.alert{padding:11px 14px;border-radius:8px;font-size:13px;display:flex;align-items:flex-start;gap:8px;margin-bottom:15px}
+.alert.info{background:#eff6ff;color:#1d4ed8;border-left:3px solid #3b82f6}
+.alert.success{background:#f0fdf4;color:#166534;border-left:3px solid #22c55e}
+.alert.warn{background:#fffbeb;color:#92400e;border-left:3px solid #f59e0b}
+
+/* ── UPLOAD ZONE ── */
+.uz{border:2px dashed var(--border);border-radius:12px;padding:28px;text-align:center;
+  cursor:pointer;transition:all .2s;color:var(--muted)}
+.uz:hover{border-color:var(--teal);background:#f0faf9;color:var(--teal)}
+.uz .ui-icon{font-size:34px;margin-bottom:8px}
+
+/* ── SUBJECT CARD ── */
+.sc{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:18px 20px;
+  cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:10px}
+.sc:hover{border-color:var(--teal);box-shadow:0 4px 20px rgba(14,165,160,.1)}
+.sc h3{font-weight:600;font-size:14px}
+.sc .scode{font-size:11px;color:var(--muted)}
+
+/* ── DIVIDER ── */
+hr{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+/* ── RING ── */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}
+.ring-wrap .rv{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy)}
+.ring-wrap .rl{font-size:11px;color:var(--muted);text-align:center}
+svg.ring circle{fill:none;stroke-width:7}
+svg.ring .track{stroke:#e2e8f0}
+svg.ring .fill{stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset 1s ease}
+
+@media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.g2,.g3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- LOADER -->
+<!-- ══════ LOGIN ══════ -->
+<div id="loginScreen">
+  <div class="lcard">
+    <div class="llogo">
+      <div class="llogo-icon">🎓</div>
+      <div class="llogo-text">
+        <h2>GPG Surat</h2>
+        <p>Information Technology Dept.</p>
+      </div>
+    </div>
+    <h1>Welcome back</h1>
+    <p class="lsub">CO Attainment & PO Mapping Portal</p>
+
+    <div class="ltabs">
+      <button class="ltab active" onclick="setAuthMode('login',this)">Sign In</button>
+      <button class="ltab" onclick="setAuthMode('register',this)">Register</button>
+    </div>
+
+    <div class="fg">
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="you@gpgsurat.ac.in"/>
+    </div>
+    <div class="fg">
+      <label>Password</label>
+      <input type="password" id="authPass" placeholder="••••••••"/>
+    </div>
+    <div class="fg" id="nameGroup" style="display:none">
+      <label>Full Name</label>
+      <input type="text" id="authName" placeholder="Dr. / Ms. / Mr. ..."/>
+    </div>
+    <div class="fg" id="roleGroup" style="display:none">
+      <label>Role</label>
+      <select id="authRole">
+        <option value="faculty">Subject Faculty</option>
+        <option value="hod">HOD / NBA Coordinator</option>
+      </select>
+    </div>
+    <button class="lbtn" id="authBtn" onclick="doAuth()">Sign In →</button>
+    <div class="lerr" id="authErr"></div>
+    <p class="lhint" id="fbStatus" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+      <span class="spinner" style="border-color:rgba(255,255,255,.15);border-top-color:rgba(255,255,255,.5);width:14px;height:14px;"></span>
+      Connecting to Firebase...
+    </p>
+    <p class="lhint" id="fbReady" style="display:none;">✅ Connected · First time? Use Register tab.</p>
+  </div>
+</div>
+
+<!-- ══════ MAIN APP ══════ -->
+<div id="mainApp">
+  <aside class="sidebar">
+    <div class="sb-head">
+      <h2>CO Portal</h2>
+      <p>GPG Surat · IT Dept</p>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-sec-lbl">Overview</div>
+      <div class="ni active" onclick="navigate('dashboard')"><span class="ic">📊</span>Dashboard</div>
+      <div class="ni" onclick="navigate('subjects')"><span class="ic">📚</span>Subjects</div>
+
+      <div class="nav-sec-lbl">Data Entry</div>
+      <div class="ni" onclick="navigate('marksEntry')"><span class="ic">✏️</span>Marks Entry</div>
+      <div class="ni" onclick="navigate('uploadMarks')"><span class="ic">📤</span>Upload GTU Report</div>
+
+      <div class="nav-sec-lbl">Attainment</div>
+      <div class="ni" onclick="navigate('coAttainment')"><span class="ic">🎯</span>CO Attainment</div>
+      <div class="ni" onclick="navigate('poAttainment')"><span class="ic">🔗</span>CO-PO Attainment</div>
+      <div class="ni" onclick="navigate('reports')"><span class="ic">📑</span>Reports</div>
+
+      <div class="nav-sec-lbl" id="adminLbl">Admin</div>
+      <div class="ni" id="navSetup" onclick="navigate('setupSubject')"><span class="ic">⚙️</span>Subject Setup</div>
+      <div class="ni" id="navUsers" onclick="navigate('manageUsers')"><span class="ic">👥</span>Manage Faculty</div>
+    </nav>
+    <div class="sb-user">
+      <div class="avatar" id="sideAvatar">F</div>
+      <div class="ui">
+        <p id="sidebarName">Faculty</p>
+        <span id="sidebarRole">Subject Faculty</span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="Logout">⏻</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="ph">
+        <h1>Dashboard</h1>
+        <p id="dashSubLabel">Loading...</p>
+      </div>
+      <div class="stats-grid" id="dashStats">
+        <div class="stat-card dark"><div class="sl">Total Students</div><div class="sv" id="dTotalStu">–</div><div class="ss">Current Subject</div></div>
+        <div class="stat-card"><div class="sl">COs Defined</div><div class="sv" id="dTotalCO">–</div><div class="ss">Course Outcomes</div></div>
+        <div class="stat-card"><div class="sl">Avg CO Attainment</div><div class="sv" id="dAvgAtt">–</div><div class="ss">Direct method</div></div>
+        <div class="stat-card"><div class="sl">POs Mapped</div><div class="sv">7+2</div><div class="ss">POs + PSOs</div></div>
+      </div>
+      <div class="g2 mb20">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>CO Attainment Overview</div>
+          <div id="dashCOBars"><p style="color:var(--muted);font-size:13px;">Select a subject to view attainment.</p></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Performance Distribution</div>
+          <div id="dashRings" style="display:flex;justify-content:space-around;padding:8px 0;"></div>
+          <hr style="margin:10px 0">
+          <div style="font-size:12px;color:var(--muted);text-align:center;">Based on Mid + Internal + Viva marks</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>My Subjects</div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Code</th><th>Subject</th><th>Year</th><th>Semester</th><th>Students</th><th>COs</th><th>Avg Attainment</th></tr></thead>
+            <tbody id="dashSubjectsTable"><tr><td colspan="7" style="text-align:center;color:var(--muted);">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SUBJECTS ── -->
+    <div class="page" id="page-subjects">
+      <div class="ph">
+        <h1>Subjects</h1>
+        <p>Manage your subjects year-wise and semester-wise</p>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center;flex-wrap:wrap;">
+        <select class="inp" style="width:160px;" id="filterYear" onchange="loadSubjectsPage()">
+          <option value="">All Years</option>
+          <option value="2022-23">2022–23</option>
+          <option value="2023-24">2023–24</option>
+          <option value="2021-22">2021–22</option>
+        </select>
+        <select class="inp" style="width:160px;" id="filterSem" onchange="loadSubjectsPage()">
+          <option value="">All Semesters</option>
+          <option value="3">Semester 3</option>
+          <option value="4">Semester 4</option>
+          <option value="5">Semester 5</option>
+          <option value="6">Semester 6</option>
+        </select>
+        <div style="flex:1"></div>
+        <button class="btn bt" onclick="openModal('modalSubject')">+ Add Subject</button>
+      </div>
+      <div class="g3" id="subjectGrid">
+        <div style="color:var(--muted);font-size:13px;">Loading subjects...</div>
+      </div>
+    </div>
+
+    <!-- ── MARKS ENTRY ── -->
+    <div class="page" id="page-marksEntry">
+      <div class="ph">
+        <h1>Marks Entry</h1>
+        <p>Enter and manage all mark components per subject</p>
+      </div>
+
+      <!-- subject selector row -->
+      <div class="card mb20">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="flex:2;min-width:180px;"><label class="inp-lbl">Subject</label>
+            <select class="inp" id="markSubjectSel"></select></div>
+          <button class="btn bt" onclick="loadMarksTable()">Load Marks</button>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <button class="btn bs bo" onclick="openModal('modalAddStudent')">+ Add Student</button>
+            <button class="btn bs bt" onclick="saveAllMarks()">💾 Save All</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESE Grade paste panel -->
+      <div class="card mb20" id="esePastePanel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="card-title" style="margin:0;"><span class="dot"></span>ESE_TH – Paste Grades from Excel</div>
+          <button class="btn bs bo" onclick="toggleEsePanel()">▲ Collapse</button>
+        </div>
+        <div id="esePanelBody">
+          <div class="alert info" style="margin-bottom:12px;">
+            📋 Copy the <strong>ESE_TH grade column</strong> from Excel (AA/AB/BB/BC/CC/CD/DD) and paste below.<br>
+            Grades are converted: AA→65, AB→56, BB→49, BC→42, CC→35, CD→29, DD→26, else→0
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
+              <label class="inp-lbl">Paste grades (one per line)</label>
+              <textarea id="esePasteArea" class="inp" rows="8"
+                style="font-family:monospace;font-size:13px;resize:vertical;line-height:1.8;"
+                placeholder="AA&#10;AB&#10;BB&#10;AA&#10;CC&#10;..."></textarea>
+              <div style="display:flex;gap:8px;margin-top:8px;">
+                <button class="btn bt" onclick="applyEseGrades()">✅ Apply Grades</button>
+                <button class="btn bo" onclick="document.getElementById('esePasteArea').value=''">Clear</button>
+              </div>
+            </div>
+            <div style="flex:1;min-width:200px;">
+              <label class="inp-lbl">Grade → Marks conversion</label>
+              <table style="font-size:13px;width:100%;border-collapse:collapse;">
+                <thead><tr>
+                  <th style="padding:6px 10px;background:#f8fafc;border:1px solid var(--border);text-align:left;">Grade</th>
+                  <th style="padding:6px 10px;background:#f8fafc;border:1px solid var(--border);text-align:left;">Marks (ESE_TH)</th>
+                  <th style="padding:6px 10px;background:#f8fafc;border:1px solid var(--border);text-align:left;">Badge</th>
+                </tr></thead>
+                <tbody>
+                  <tr><td style="padding:5px 10px;border:1px solid var(--border);">AA</td><td style="padding:5px 10px;border:1px solid var(--border);">65</td><td style="padding:5px 10px;border:1px solid var(--border);"><span class="badge h">Excellent</span></td></tr>
+                  <tr><td style="padding:5px 10px;border:1px solid var(--border);">AB</td><td style="padding:5px 10px;border:1px solid var(--border);">56</td><td style="padding:5px 10px;border:1px solid var(--border);"><span class="badge h">Very Good</span></td></tr>
+                  <tr><td style="padding:5px 10px;border:1px solid var(--border);">BB</td><td style="padding:5px 10px;border:1px solid var(--border);">49</td><td style="padding:5px 10px;border:1px solid var(--border);"><span class="badge b">Good</span></td></tr>
+                  <tr><td style="padding:5px 10px;border:1px solid var(--border);">BC</td><td style="padding:5px 10px;border:1px solid var(--border);">42</td><td style="padding:5px 10px;border:1px solid var(--border);"><span class="badge b">Above Avg</span></td></tr>
+                  <tr><td style="padding:5px 10px;border:1px solid var(--border);">CC</td><td style="padding:5px 10px;border:1px solid var(--border);">35</td><td style="padding:5px 10px;border:1px solid var(--border);"><span class="badge m">Average</span></td></tr>
+                  <tr><td style="padding:5px 10px;border:1px solid var(--border);">CD</td><td style="padding:5px 10px;border:1px solid var(--border);">29</td><td style="padding:5px 10px;border:1px solid var(--border);"><span class="badge m">Below Avg</span></td></tr>
+                  <tr><td style="padding:5px 10px;border:1px solid var(--border);">DD</td><td style="padding:5px 10px;border:1px solid var(--border);">26</td><td style="padding:5px 10px;border:1px solid var(--border);"><span class="badge l">Pass</span></td></tr>
+                  <tr><td style="padding:5px 10px;border:1px solid var(--border);">FF/AB</td><td style="padding:5px 10px;border:1px solid var(--border);">0</td><td style="padding:5px 10px;border:1px solid var(--border);"><span class="badge l">Fail/Absent</span></td></tr>
+                </tbody>
+              </table>
+              <div id="eseApplyStatus" style="margin-top:8px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- marks table -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div class="card-title" style="margin:0;"><span class="dot"></span>Student Marks</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:12px;color:var(--muted);align-self:center;">ESE_TH max: 70 | Mid: 30 | Int: 25 | Viva: 25</span>
+          </div>
+        </div>
+        <div class="tw"><table>
+          <thead><tr>
+            <th>#</th>
+            <th>Enrollment No.</th>
+            <th>Student Name</th>
+            <th>ESE_TH Grade</th>
+            <th>ESE_TH<br><small style="font-weight:400;color:#94a3b8;">/70</small></th>
+            <th>Mid<br><small style="font-weight:400;color:#94a3b8;">/30</small></th>
+            <th>Internal<br><small style="font-weight:400;color:#94a3b8;">/25</small></th>
+            <th>Viva<br><small style="font-weight:400;color:#94a3b8;">/25</small></th>
+            <th>Total<br><small style="font-weight:400;color:#94a3b8;">/150</small></th>
+            <th>%</th>
+            <th>Action</th>
+          </tr></thead>
+          <tbody id="marksTableBody">
+            <tr><td colspan="11" style="text-align:center;color:var(--muted);">Select a subject and click Load.</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── UPLOAD ── -->
+    <div class="page" id="page-uploadMarks">
+      <div class="ph">
+        <h1>Import Student Marks</h1>
+        <p>Upload GTU report file OR paste data directly from GTU portal / Excel</p>
+      </div>
+
+      <div class="ff" style="max-width:380px;margin-bottom:20px;">
+        <label class="inp-lbl">Subject</label>
+        <select class="inp" id="uploadSubjectSel"></select>
+      </div>
+
+      <div class="tabs" id="importTabs">
+        <button class="tab active" onclick="switchImportTab(this,'import-file')">📄 Upload File</button>
+        <button class="tab" onclick="switchImportTab(this,'import-paste')">📋 Copy-Paste Data</button>
+        <button class="tab" onclick="switchImportTab(this,'import-manual')">✏️ Manual Entry</button>
+      </div>
+
+      <!-- FILE UPLOAD TAB -->
+      <div id="import-file">
+        <div class="g2">
+          <div class="card">
+            <div class="card-title"><span class="dot"></span>Upload GTU Report</div>
+            <div class="uz" id="dropZone" onclick="document.getElementById('fileInput').click()"
+              ondragover="event.preventDefault();this.style.borderColor='var(--teal)'"
+              ondragleave="this.style.borderColor='var(--border)'"
+              ondrop="event.preventDefault();this.style.borderColor='var(--border)';handleFileDrop(event)">
+              <div class="ui-icon">📂</div>
+              <p style="font-weight:500;">Click to browse or drag & drop</p>
+              <small style="margin-top:4px;display:block;color:var(--muted);">Supports: .pdf · .txt · .zip</small>
+            </div>
+            <input type="file" id="fileInput" accept=".pdf,.txt,.zip" style="display:none" onchange="parseGTUFile(this.files[0])"/>
+
+            <div style="margin-top:14px;">
+              <div class="alert info" style="font-size:12px;line-height:1.7;">
+                <strong>GTU Portal → Print → Save as PDF</strong><br>
+                Open the mark report on GTU portal, press <strong>Ctrl+P</strong> → Save as PDF → upload that PDF here.<br>
+                Also supports the ZIP file (contains .txt) from GTU downloads.
+              </div>
+            </div>
+
+            <div id="uploadStatus" style="margin-top:12px;display:none;">
+              <div id="uploadMsg" class="alert success">✅ Parsed successfully!</div>
+              <div id="uploadProgress" style="display:none;margin-top:8px;">
+                <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden;">
+                  <div id="uploadProgressBar" style="height:100%;background:var(--teal);border-radius:99px;width:0%;transition:width .3s;"></div>
+                </div>
+                <p style="font-size:12px;color:var(--muted);margin-top:4px;" id="uploadProgressLabel">Reading PDF...</p>
+              </div>
+              <button class="btn bt" style="width:100%;margin-top:10px;" onclick="saveUploadedMarks()">💾 Save to Database →</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span class="dot"></span>Parsed Preview</div>
+            <div id="uploadPreview">
+              <p style="color:var(--muted);font-size:13px;line-height:1.8;">Upload a GTU report to preview here.<br><br>
+              Parser detects:<br>
+              • 13-digit GTU enrollment numbers<br>
+              • Student full names<br>
+              • Mid · RemMid · Internal · Viva marks<br>
+              • Multi-page PDFs (all pages combined)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASTE TAB -->
+      <div id="import-paste" style="display:none">
+        <div class="card mb20">
+          <div class="card-title"><span class="dot"></span>Paste Data from GTU Portal / Excel</div>
+          <div class="alert info" style="margin-bottom:14px;">
+            📋 Open your GTU PDF → <strong>Ctrl+A</strong> (select all) → <strong>Ctrl+C</strong> → paste below.<br>
+            <strong>Format:</strong> Sr · 12-digit Enrollment · Name · Mid · RemMid(or -) · Internal · Viva<br>
+            <strong>Note:</strong> Enrollment numbers must be 12 digits starting with 2 (e.g. 216150316001)
+          </div>
+          <textarea id="pasteArea" class="inp" rows="12"
+            style="font-family:monospace;font-size:12px;resize:vertical;line-height:1.6;"
+            placeholder="Paste from GTU portal or PDF. Accepted format:
+
+1 206150316067 THAKOR VRUSHTI DOLATSINH 9 - 12 12
+2 216150316001 RAJPOPAT NESEE RAJESHBHAI 26 - 22 24
+3 216150316002 Sorathia Aayushi Darshan 19 - 20 17
+
+→ Select all text from GTU PDF, Ctrl+C, paste here.
+→ Enrollment must be 12 digits (e.g. 206150316067)
+→ Columns: Sr  Enrollment  Name  Mid  RemMid  Internal  Viva"></textarea>
+          <div style="display:flex;gap:10px;margin-top:12px;">
+            <button class="btn bt" onclick="parsePastedData()">🔍 Parse & Preview</button>
+            <button class="btn bo" onclick="document.getElementById('pasteArea').value=''">Clear</button>
+          </div>
+          <div id="pasteStatus" style="margin-top:12px;display:none;">
+            <div class="alert success" id="pasteMsg"></div>
+            <button class="btn bt" style="margin-top:8px;" onclick="saveParsedStudents()">💾 Save to Database →</button>
+          </div>
+        </div>
+        <div class="card" id="pastePreviewCard" style="display:none">
+          <div class="card-title"><span class="dot"></span>Preview – Parsed Students</div>
+          <div class="tw"><table>
+            <thead><tr><th>#</th><th>Enrollment</th><th>Name</th><th>Mid</th><th>Internal</th><th>Viva</th><th>Total</th></tr></thead>
+            <tbody id="pastePreviewBody"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- MANUAL TAB -->
+      <div id="import-manual" style="display:none">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Add Students One by One</div>
+          <div class="fr">
+            <div><label class="inp-lbl">Enrollment No.</label><input class="inp" id="mStuEnr2" placeholder="216150316001"/></div>
+            <div><label class="inp-lbl">Student Name</label><input class="inp" id="mStuName2" placeholder="Full Name in Caps"/></div>
+          </div>
+          <div class="fr">
+            <div><label class="inp-lbl">Mid Marks (/30)</label><input class="inp" id="mStuMid2" type="number" min="0" max="30" placeholder="0"/></div>
+            <div><label class="inp-lbl">Internal (/25)</label><input class="inp" id="mStuInt2" type="number" min="0" max="25" placeholder="0"/></div>
+          </div>
+          <div class="ff" style="max-width:200px;">
+            <label class="inp-lbl">Viva (/25)</label>
+            <input class="inp" id="mStuViva2" type="number" min="0" max="25" placeholder="0"/>
+          </div>
+          <button class="btn bt" onclick="saveManualStudentInline()">+ Add Student</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CO ATTAINMENT ── -->
+    <div class="page" id="page-coAttainment">
+      <div class="ph">
+        <h1>CO Attainment</h1>
+        <p>Direct and indirect CO attainment calculation</p>
+      </div>
+      <div class="ff" style="max-width:320px;margin-bottom:20px;">
+        <label class="inp-lbl">Subject</label>
+        <select class="inp" id="coSubjectSel" onchange="loadCOAttainment()"></select>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab(this,'co-direct')">Direct (Exam)</button>
+        <button class="tab" onclick="switchTab(this,'co-indirect')">Indirect (Survey)</button>
+        <button class="tab" onclick="switchTab(this,'co-final')">Final Attainment</button>
+      </div>
+
+      <div id="co-direct">
+        <div class="alert info">📐 Direct Attainment = Students scoring ≥50% in CO-linked questions ÷ Total × 100</div>
+        <div class="g2 mb20">
+          <div class="card">
+            <div class="card-title"><span class="dot"></span>CO-wise Attainment</div>
+            <div id="coDirectBars"></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="dot"></span>Attainment vs Target</div>
+            <div class="tw"><table>
+              <thead><tr><th>CO</th><th>Attained</th><th>Target</th><th>Level</th><th>Status</th></tr></thead>
+              <tbody id="coTargetTbl"></tbody>
+            </table></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>CO-Question Mapping</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Define which assessment/question maps to which CO.</p>
+          <div class="tw"><table>
+            <thead><tr><th>Assessment</th><th>Max Marks</th><th>Mapped CO</th><th>Bloom's Level</th></tr></thead>
+            <tbody id="coQMapTbl"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <div id="co-indirect" style="display:none">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Indirect Attainment – Student Survey</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">Rate each CO based on student feedback survey (scale 1–5 → converted to %).</p>
+          <div id="indirectForm"></div>
+          <button class="btn bt" onclick="saveIndirectAttainment()">💾 Save Indirect Attainment</button>
+        </div>
+      </div>
+
+      <div id="co-final" style="display:none">
+        <div class="alert info">Final = 80% Direct + 20% Indirect</div>
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Final CO Attainment</div>
+          <div class="tw"><table>
+            <thead><tr><th>CO</th><th>Statement</th><th>Direct%</th><th>Indirect%</th><th>Final%</th><th>Level (0–3)</th><th>Target Met?</th></tr></thead>
+            <tbody id="finalCOTbl"></tbody>
+          </table></div>
+          <div style="margin-top:14px;display:flex;gap:10px;">
+            <button class="btn bt" onclick="saveFinalAttainment()">💾 Save Final Attainment</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CO-PO ATTAINMENT ── -->
+    <div class="page" id="page-poAttainment">
+      <div class="ph">
+        <h1>CO-PO Attainment</h1>
+        <p>Programme Outcome attainment derived from CO attainment</p>
+      </div>
+      <div class="ff" style="max-width:320px;margin-bottom:20px;">
+        <label class="inp-lbl">Subject</label>
+        <select class="inp" id="poSubjectSel" onchange="loadPOAttainment()"></select>
+      </div>
+      <div class="card mb20">
+        <div class="card-title"><span class="dot"></span>CO-PO Mapping Matrix</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Correlation: 3 = High, 2 = Medium, 1 = Low, 0 = None</p>
+        <div class="tw"><table class="hm" id="coPOMatrixTbl"></table></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>PO Attainment Values</div>
+          <div class="tw"><table>
+            <thead><tr><th>PO/PSO</th><th>Attainment</th><th>Out of</th><th>Level</th></tr></thead>
+            <tbody id="poAttTbl"></tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>PO Attainment Bars</div>
+          <div id="poBarsContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REPORTS ── -->
+    <div class="page" id="page-reports">
+      <div class="ph"><h1>Reports</h1><p>Generate and export NBA/CO attainment reports</p></div>
+      <div class="ff" style="max-width:320px;margin-bottom:20px;">
+        <label class="inp-lbl">Subject</label>
+        <select class="inp" id="reportSubjectSel" onchange="loadReport()"></select>
+      </div>
+      <div class="g3 mb20">
+        <div class="sc" onclick="generateReport('co')">
+          <div style="font-size:32px;">📊</div>
+          <h3>CO Attainment Report</h3>
+          <p style="font-size:12px;color:var(--muted);">Full CO-wise direct & indirect attainment in NBA format</p>
+          <button class="btn bs bt" style="width:fit-content;">Generate PDF</button>
+        </div>
+        <div class="sc" onclick="generateReport('copo')">
+          <div style="font-size:32px;">🔗</div>
+          <h3>CO-PO Matrix Report</h3>
+          <p style="font-size:12px;color:var(--muted);">Heatmap matrix with justifications for NBA submission</p>
+          <button class="btn bs bt" style="width:fit-content;">Generate PDF</button>
+        </div>
+        <div class="sc" onclick="exportMarksCSV()">
+          <div style="font-size:32px;">📋</div>
+          <h3>Student Marks Sheet</h3>
+          <p style="font-size:12px;color:var(--muted);">Full student-wise mark sheet with grades</p>
+          <button class="btn bs bo" style="width:fit-content;">Export CSV</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>CO Attainment Summary</div>
+        <div class="tw"><table>
+          <thead><tr><th>CO</th><th>Statement</th><th>Direct%</th><th>Indirect%</th><th>Final%</th><th>Level</th><th>Target</th><th>Status</th></tr></thead>
+          <tbody id="reportSummaryTbl"><tr><td colspan="8" style="text-align:center;color:var(--muted);">Select a subject above.</td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── SETUP SUBJECT ── -->
+    <div class="page" id="page-setupSubject">
+      <div class="ph"><h1>Subject Setup</h1><p>Configure COs, CO-PO mapping and attainment targets</p></div>
+      <div class="ff" style="max-width:320px;margin-bottom:20px;">
+        <label class="inp-lbl">Select Subject to Configure</label>
+        <select class="inp" id="setupSubjectSel" onchange="loadSetupSubject()"></select>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab(this,'setup-co')">Course Outcomes</button>
+        <button class="tab" onclick="switchTab(this,'setup-copo')">CO-PO Mapping</button>
+        <button class="tab" onclick="switchTab(this,'setup-target')">Targets</button>
+      </div>
+      <div id="setup-co">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Course Outcomes</div>
+          <div id="coSetupList"></div>
+          <hr><button class="btn bo" onclick="addCORow()">+ Add CO</button>
+          <button class="btn bt" style="margin-left:8px;" onclick="saveCOs()">💾 Save COs</button>
+        </div>
+      </div>
+      <div id="setup-copo" style="display:none">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>CO-PO Correlation Matrix</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">3 = High, 2 = Medium, 1 = Low, 0 = None</p>
+          <div class="tw"><table class="hm" id="editCOPOTbl"></table></div>
+          <div style="margin-top:14px;display:flex;gap:8px;">
+            <button class="btn bt" onclick="saveCOPOMatrix()">💾 Save Matrix</button>
+            <button class="btn bo" onclick="loadSetupSubject()">Reset</button>
+          </div>
+        </div>
+      </div>
+      <div id="setup-target" style="display:none">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Attainment Targets</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">NBA typically expects ≥60% attainment for each CO.</p>
+          <div id="targetSetupList"></div>
+          <hr>
+          <div class="fr" style="max-width:340px;">
+            <div><label class="inp-lbl">Direct Weight%</label><input class="inp" id="directW" type="number" value="80"/></div>
+            <div><label class="inp-lbl">Indirect Weight%</label><input class="inp" id="indirectW" type="number" value="20"/></div>
+          </div>
+          <button class="btn bt" onclick="saveTargets()">💾 Save Targets</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MANAGE USERS ── -->
+    <div class="page" id="page-manageUsers">
+      <div class="ph"><h1>Manage Faculty</h1><p>View all registered faculty accounts</p></div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Faculty Accounts</div>
+        <div class="tw"><table>
+          <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Registered</th></tr></thead>
+          <tbody id="usersTable"><tr><td colspan="5" style="text-align:center;color:var(--muted);">Loading...</td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /mainApp -->
+
+<!-- ══════ MODALS ══════ -->
+<div class="mo" id="modalSubject">
+  <div class="mc">
+    <h2>Add Subject</h2>
+    <p class="msub">Set up a new subject for CO attainment tracking</p>
+    <div class="fr">
+      <div><label class="inp-lbl">Subject Code</label><input class="inp" id="mSubCode" placeholder="e.g. 4331603"/></div>
+      <div><label class="inp-lbl">Subject Name</label><input class="inp" id="mSubName" placeholder="e.g. Database Management"/></div>
+    </div>
+    <div class="fr">
+      <div><label class="inp-lbl">Academic Year</label>
+        <select class="inp" id="mSubYear"><option value="2022-23">2022–23</option><option value="2023-24">2023–24</option><option value="2024-25">2024–25</option></select></div>
+      <div><label class="inp-lbl">Semester</label>
+        <select class="inp" id="mSubSem"><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
+    </div>
+    <div class="fr">
+      <div><label class="inp-lbl">Credits</label><input class="inp" id="mSubCredits" type="number" value="5"/></div>
+      <div><label class="inp-lbl">L:T:P</label><input class="inp" id="mSubLTP" placeholder="3:0:4"/></div>
+    </div>
+    <div class="ff"><label class="inp-lbl">Total Marks</label><input class="inp" id="mSubMarks" type="number" value="150"/></div>
+    <div class="ma">
+      <button class="btn bo" onclick="closeModal('modalSubject')">Cancel</button>
+      <button class="btn bt" onclick="saveSubject()">Add Subject</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="modalAddStudent">
+  <div class="mc">
+    <h2>Add Student</h2>
+    <p class="msub">Add a student record manually to the selected subject</p>
+    <div class="fr">
+      <div><label class="inp-lbl">Enrollment No.</label><input class="inp" id="mStuEnr" placeholder="216150316001"/></div>
+      <div><label class="inp-lbl">Student Name</label><input class="inp" id="mStuName" placeholder="Full Name"/></div>
+    </div>
+    <div class="fr">
+      <div><label class="inp-lbl">Mid Marks (/30)</label><input class="inp" id="mStuMid" type="number" min="0" max="30"/></div>
+      <div><label class="inp-lbl">Internal (/25)</label><input class="inp" id="mStuInt" type="number" min="0" max="25"/></div>
+    </div>
+    <div class="ff"><label class="inp-lbl">Viva (/25)</label><input class="inp" id="mStuViva" type="number" min="0" max="25"/></div>
+    <div class="ma">
+      <button class="btn bo" onclick="closeModal('modalAddStudent')">Cancel</button>
+      <button class="btn bt" onclick="saveManualStudent()">Add Student</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
+let currentUser = null;
+let currentProfile = null;
+let activeSubjectId = null;
+let parsedStudents = [];
+const PO_LABELS = ['PO1','PO2','PO3','PO4','PO5','PO6','PO7','PSO1','PSO2'];
+const DEFAULT_CO_PO = [[3,0,0,0,0,0,0,3,0],[2,3,2,1,0,1,2,2,2],[2,1,0,0,0,0,0,1,0],[3,2,3,3,0,1,1,3,3],[2,3,2,0,0,2,2,3,2],[2,2,0,0,0,0,0,2,0]];
+
+// ════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════
+function toast(msg, type='info') {
+  const t = document.getElementById('toast');
+  const d = document.createElement('div');
+  d.className = `toast-msg ${type}`;
+  d.textContent = msg;
+  t.appendChild(d);
+  requestAnimationFrame(() => d.classList.add('show'));
+  setTimeout(() => { d.classList.remove('show'); setTimeout(() => d.remove(), 400); }, 3500);
+}
+
+// ════════════════════════════════════════════
+//  AUTH INIT — show login immediately, Firebase connects in background
+// ════════════════════════════════════════════
+
+// Show login screen right away — no waiting for Firebase
+showLogin();
+
+// Then let Firebase auth state resolve in background
+try {
+  auth.onAuthStateChanged(async user => {
+    if (user) {
+      currentUser = user;
+      try {
+        const snap = await db.collection('users').doc(user.uid).get();
+        if (snap.exists) {
+          currentProfile = snap.data();
+          showApp();
+        }
+        // if no profile: stay on login
+      } catch(e) {
+        console.error('Firestore error:', e);
+        // stay on login, user can sign in manually
+      }
+    }
+    // if no user: already on login, do nothing
+  });
+} catch(e) {
+  console.error('Firebase SDK error:', e);
+  document.getElementById('authErr').textContent = 'Firebase SDK failed to load. Check internet connection.';
+}
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+  // Mark firebase as ready when this is called from onAuthStateChanged
+  const fbStatus = document.getElementById('fbStatus');
+  const fbReady  = document.getElementById('fbReady');
+  if (fbStatus) fbStatus.style.display = 'none';
+  if (fbReady)  fbReady.style.display  = '';
+}
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  const n = currentProfile.name || currentUser.email;
+  document.getElementById('sidebarName').textContent = n;
+  document.getElementById('sidebarRole').textContent = currentProfile.role === 'hod' ? 'HOD / NBA Coordinator' : 'Subject Faculty';
+  document.getElementById('sideAvatar').textContent = n.charAt(0).toUpperCase();
+  if (currentProfile.role !== 'hod') {
+    document.getElementById('adminLbl').style.display = 'none';
+    document.getElementById('navSetup').style.display = 'none';
+    document.getElementById('navUsers').style.display = 'none';
+  }
+  loadDashboard();
+  populateSubjectSelects();
+}
+
+// ════════════════════════════════════════════
+//  AUTH ACTIONS
+// ════════════════════════════════════════════
+let authMode = 'login';
+function setAuthMode(mode, btn) {
+  authMode = mode;
+  document.querySelectorAll('.ltab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('nameGroup').style.display = mode === 'register' ? '' : 'none';
+  document.getElementById('roleGroup').style.display = mode === 'register' ? '' : 'none';
+  document.getElementById('authBtn').textContent = mode === 'register' ? 'Create Account →' : 'Sign In →';
+  document.getElementById('authErr').textContent = '';
+}
+
+async function doAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass  = document.getElementById('authPass').value;
+  const btn   = document.getElementById('authBtn');
+  const err   = document.getElementById('authErr');
+  if (!email || !pass) { err.textContent = 'Please enter email and password.'; return; }
+  btn.disabled = true;
+  btn.textContent = authMode === 'login' ? 'Signing in…' : 'Creating account…';
+  err.textContent = '';
+  try {
+    if (authMode === 'login') {
+      const cred = await auth.signInWithEmailAndPassword(email, pass);
+      currentUser = cred.user;
+      const snap = await db.collection('users').doc(currentUser.uid).get();
+      if (!snap.exists) { err.textContent = 'Account not set up. Please register.'; auth.signOut(); }
+      else { currentProfile = snap.data(); showApp(); }
+    } else {
+      const name = document.getElementById('authName').value.trim();
+      const role = document.getElementById('authRole').value;
+      if (!name) { err.textContent = 'Please enter your name.'; btn.disabled = false; btn.textContent = 'Create Account →'; return; }
+      const cred = await auth.createUserWithEmailAndPassword(email, pass);
+      currentUser = cred.user;
+      const profile = { name, email, role, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+      await db.collection('users').doc(currentUser.uid).set(profile);
+      currentProfile = profile;
+      showApp();
+    }
+  } catch(e) {
+    err.textContent = e.message.replace('Firebase: ','').replace(/\(auth.*?\)/,'').trim();
+    btn.disabled = false;
+    btn.textContent = authMode === 'login' ? 'Sign In →' : 'Create Account →';
+  }
+}
+
+async function doLogout() {
+  await auth.signOut();
+  currentUser = null; currentProfile = null; activeSubjectId = null;
+  showLogin();
+  toast('Signed out successfully');
+}
+
+// ════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.ni').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(page)) n.classList.add('active');
+  });
+  if (page === 'subjects') loadSubjectsPage();
+  if (page === 'manageUsers') loadUsers();
+  if (page === 'coAttainment') loadCOAttainment();
+  if (page === 'poAttainment') loadPOAttainment();
+  if (page === 'reports') loadReport();
+  if (page === 'setupSubject') loadSetupSubject();
+}
+
+function switchTab(btn, targetId) {
+  const parent = btn.closest('.tabs');
+  parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  let el = parent.nextElementSibling;
+  while (el) { el.style.display = 'none'; el = el.nextElementSibling; }
+  document.getElementById(targetId).style.display = '';
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('click', e => { if (e.target.classList.contains('mo')) e.target.classList.remove('open'); });
+
+// ════════════════════════════════════════════
+//  SUBJECTS
+// ════════════════════════════════════════════
+async function getMySubjects() {
+  let snap;
+  try {
+    if (currentProfile.role === 'hod') {
+      snap = await db.collection('subjects').orderBy('createdAt','desc').get();
+    } else {
+      // where + orderBy requires composite index, so fetch filtered then sort in JS
+      snap = await db.collection('subjects').where('uid', '==', currentUser.uid).get();
+    }
+    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return docs.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+  } catch(e) {
+    console.error('getMySubjects error:', e);
+    toast('Error loading subjects: ' + e.message, 'error');
+    return [];
+  }
+}
+
+async function populateSubjectSelects() {
+  try {
+    const subs = await getMySubjects();
+    const selIds = ['markSubjectSel','uploadSubjectSel','coSubjectSel','poSubjectSel','reportSubjectSel','setupSubjectSel'];
+    selIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = subs.length
+        ? subs.map(s => `<option value="${s.id}">${s.code} – ${s.name} (${s.year})</option>`).join('')
+        : '<option value="">No subjects yet – add one</option>';
+    });
+    if (subs.length) activeSubjectId = subs[0].id;
+  } catch(e) {
+    console.error('populateSubjectSelects error:', e);
+  }
+}
+
+async function saveSubject() {
+  const code = document.getElementById('mSubCode').value.trim();
+  const name = document.getElementById('mSubName').value.trim();
+  if (!code || !name) { toast('Please fill Subject Code and Name','error'); return; }
+  const subj = {
+    code, name,
+    year: document.getElementById('mSubYear').value,
+    semester: document.getElementById('mSubSem').value,
+    credits: document.getElementById('mSubCredits').value,
+    ltp: document.getElementById('mSubLTP').value,
+    totalMarks: document.getElementById('mSubMarks').value,
+    uid: currentUser.uid,
+    ownerName: currentProfile.name,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    const ref = await db.collection('subjects').add(subj);
+    const sid = ref.id;
+    // Write default COs one by one using full path (compat SDK batch can't handle new subcollections)
+    const defaultCOs = [
+      {id:'CO1',stmt:'Explain the basic concepts of databases.',bloom:'U',target:60},
+      {id:'CO2',stmt:'Design database using Entity relationship approach.',bloom:'C',target:60},
+      {id:'CO3',stmt:'Implement Relational algebra in a database.',bloom:'A',target:60},
+      {id:'CO4',stmt:'Apply SQL Commands for creating, manipulating and controlling databases.',bloom:'A',target:60},
+      {id:'CO5',stmt:'Apply concepts of normalization to design an optimal database.',bloom:'A',target:60},
+      {id:'CO6',stmt:'Explain transaction management concepts for concurrent use of database.',bloom:'U',target:60},
+    ];
+    const writes = defaultCOs.map(co =>
+      db.collection('subjects').doc(sid).collection('cos').doc(co.id).set(co)
+    );
+    writes.push(
+      db.collection('subjects').doc(sid).collection('config').doc('copo').set({
+        matrix: DEFAULT_CO_PO, weights: {direct:80, indirect:20}
+      })
+    );
+    await Promise.all(writes);
+    toast('Subject added successfully!','success');
+    closeModal('modalSubject');
+    await populateSubjectSelects();
+    loadSubjectsPage();
+  } catch(e) {
+    console.error('saveSubject error:', e);
+    toast('Error adding subject: ' + e.message, 'error');
+  }
+}
+
+async function loadSubjectsPage() {
+  const grid = document.getElementById('subjectGrid');
+  grid.innerHTML = '<div style="color:var(--muted);font-size:13px;">Loading...</div>';
+  const yr = document.getElementById('filterYear')?.value;
+  const sm = document.getElementById('filterSem')?.value;
+  let subs = await getMySubjects();
+  if (yr) subs = subs.filter(s => s.year === yr);
+  if (sm) subs = subs.filter(s => s.semester === sm);
+  if (!subs.length) { grid.innerHTML = '<div style="color:var(--muted);font-size:13px;">No subjects found. Add one!</div>'; return; }
+  grid.innerHTML = subs.map(s => `
+    <div class="sc" onclick="activeSubjectId='${s.id}';navigate('coAttainment')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="scode">${s.code} · ${s.year} · Sem ${s.semester}</div>
+          <h3>${s.name}</h3>
+        </div>
+        <button class="btn bs bd" onclick="event.stopPropagation();deleteSubject('${s.id}','${s.name}')"
+          style="padding:4px 10px;font-size:12px;flex-shrink:0;margin-left:8px;">✕ Delete</button>
+      </div>
+      <div><span class="pill">💳 ${s.credits} Credits</span><span class="pill">📅 ${s.year}</span></div>
+      <div style="font-size:12px;color:var(--muted);">👩‍🏫 ${s.ownerName||'Faculty'}</div>
+    </div>`).join('');
+}
+
+async function deleteSubject(id, name) {
+  if (!confirm(`Delete subject "${name}"?\nThis will also delete all students, marks, COs and attainment data for this subject. This cannot be undone.`)) return;
+  try {
+    // Delete all subcollections first
+    const subcols = ['students','cos','attainment','config'];
+    for (const col of subcols) {
+      const snap = await db.collection('subjects').doc(id).collection(col).get();
+      await Promise.all(snap.docs.map(d => d.ref.delete()));
+    }
+    await db.collection('subjects').doc(id).delete();
+    toast('Subject deleted successfully', 'success');
+    await populateSubjectSelects();
+    loadSubjectsPage();
+  } catch(e) {
+    console.error(e);
+    toast('Error deleting subject: ' + e.message, 'error');
+  }
+}
+
+// ════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════
+async function loadDashboard() {
+  let subs = [];
+  try {
+    subs = await getMySubjects();
+  } catch(e) { console.error(e); }
+  const tbody = document.getElementById('dashSubjectsTable');
+  if (!subs.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);">No subjects yet. Add one in Subjects page.</td></tr>';
+    document.getElementById('dashSubLabel').textContent = 'No subjects yet';
+    return;
+  }
+  const first = subs[0];
+  document.getElementById('dashSubLabel').textContent = `${first.name} (${first.code}) · ${first.year}`;
+  activeSubjectId = first.id;
+
+  const stuSnap = await db.collection('subjects').doc(first.id).collection('students').get();
+  const students = stuSnap.docs.map(d => d.data());
+  document.getElementById('dTotalStu').textContent = students.length;
+
+  const coSnap = await db.collection('subjects').doc(first.id).collection('cos').get();
+  const cos = coSnap.docs.map(d => d.data());
+  document.getElementById('dTotalCO').textContent = cos.length;
+
+  const attSnap = await db.collection('subjects').doc(first.id).collection('attainment').doc('direct').get();
+  const att = attSnap.exists ? attSnap.data() : {};
+  const vals = cos.map(co => att[co.id]?.pct || 0);
+  const avg = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
+  document.getElementById('dAvgAtt').textContent = avg + '%';
+
+  // CO bars
+  const barsWrap = document.getElementById('dashCOBars');
+  barsWrap.innerHTML = cos.map(co => {
+    const pct = att[co.id]?.pct || 0;
+    const cls = pct>=70?'bh':pct>=60?'bm':'bl';
+    return `<div class="co-bar"><div class="co-bar-h"><span>${co.id}</span><span style="font-weight:600">${pct}%</span></div>
+      <div class="co-bar-track"><div class="co-bar-fill ${cls}" style="width:${pct}%"></div></div></div>`;
+  }).join('');
+
+  // Rings
+  const above60 = students.filter(s => pct(s) >= 60).length;
+  const above80 = students.filter(s => pct(s) >= 80).length;
+  const avgPct  = students.length ? Math.round(students.reduce((a,s)=>a+pct(s),0)/students.length) : 0;
+  document.getElementById('dashRings').innerHTML =
+    ring(students.length ? Math.round(above60/students.length*100) : 0,'#22c55e','≥60% Students') +
+    ring(students.length ? Math.round(above80/students.length*100) : 0,'#0ea5a0','≥80% Students') +
+    ring(avgPct,'#f59e0b','Avg Score%');
+
+  // Table
+  tbody.innerHTML = await Promise.all(subs.map(async s => {
+    const ss = await db.collection('subjects').doc(s.id).collection('students').get();
+    const cc = await db.collection('subjects').doc(s.id).collection('cos').get();
+    const aa = await db.collection('subjects').doc(s.id).collection('attainment').doc('direct').get();
+    const aData = aa.exists ? aa.data() : {};
+    const coList = cc.docs.map(d=>d.data());
+    const avgA = coList.length ? Math.round(coList.reduce((a,co)=>a+(aData[co.id]?.pct||0),0)/coList.length) : 0;
+    return `<tr><td>${s.code}</td><td>${s.name}</td><td>${s.year}</td><td>Sem ${s.semester}</td>
+      <td>${ss.size}</td><td>${cc.size}</td>
+      <td><span class="badge ${avgA>=70?'h':avgA>=60?'m':'l'}">${avgA}%</span></td></tr>`;
+  })).then(rows => rows.join(''));
+}
+
+function pct(s) {
+  const total = (s.ese_th||0) + (s.mid||0) + (s.internal||0) + (s.viva||0);
+  return Math.round(total / 150 * 100);
+}
+function ring(p,color,label) {
+  const r=30, circ=2*Math.PI*r, off=circ*(1-p/100);
+  return `<div class="ring-wrap"><svg class="ring" width="76" height="76" viewBox="0 0 76 76">
+    <circle class="track" cx="38" cy="38" r="${r}"/>
+    <circle class="fill" cx="38" cy="38" r="${r}" stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${off}"/>
+    </svg><div class="rv">${p}%</div><div class="rl">${label}</div></div>`;
+}
+
+// ════════════════════════════════════════════
+//  MARKS
+// ════════════════════════════════════════════
+let loadedStudents = [];
+async function loadMarksTable() {
+  const subId = document.getElementById('markSubjectSel').value;
+  if (!subId) return;
+  activeSubjectId = subId;
+  const snap = await db.collection('subjects').doc(subId).collection('students').orderBy('sr').get();
+  loadedStudents = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+  renderMarksTable();
+}
+
+// ── Grade → ESE_TH marks conversion (GTU formula) ──
+const GRADE_MAP = { AA:65, AB:56, BB:49, BC:42, CC:35, CD:29, DD:26 };
+function gradeToMarks(g) {
+  const clean = (g||'').toString().trim().toUpperCase();
+  return GRADE_MAP[clean] !== undefined ? GRADE_MAP[clean] : 0;
+}
+function marksToGrade(m) {
+  const v = parseInt(m)||0;
+  if (v>=65) return 'AA';
+  if (v>=56) return 'AB';
+  if (v>=49) return 'BB';
+  if (v>=42) return 'BC';
+  if (v>=35) return 'CC';
+  if (v>=29) return 'CD';
+  if (v>=26) return 'DD';
+  return v>0 ? 'FF' : '–';
+}
+function gradeBadgeClass(g) {
+  return {AA:'h',AB:'h',BB:'b',BC:'b',CC:'m',CD:'m',DD:'l',FF:'l'}[g] || 'g';
+}
+
+function renderMarksTable() {
+  const tbody = document.getElementById('marksTableBody');
+  if (!loadedStudents.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--muted);">No students found. Upload GTU report or add manually.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = loadedStudents.map((s,i) => {
+    const ese   = s.ese_th || 0;
+    const mid   = s.mid    || 0;
+    const int_  = s.internal || 0;
+    const viva  = s.viva   || 0;
+    const total = ese + mid + int_ + viva;
+    const maxT  = 70 + 30 + 25 + 25; // 150
+    const p     = Math.round(total / maxT * 100);
+    const grade = marksToGrade(ese);
+    const gc    = gradeBadgeClass(grade);
+    return `<tr>
+      <td>${i+1}</td>
+      <td style="font-size:11px;font-family:monospace">${s.enr||''}</td>
+      <td style="white-space:nowrap">${s.name||''}</td>
+      <td style="text-align:center;">
+        <span class="badge ${gc}" id="grade_badge_${i}">${grade}</span>
+      </td>
+      <td><input type="number" class="inp" style="width:60px;padding:5px 7px"
+            data-idx="${i}" data-field="ese_th" value="${ese}"
+            min="0" max="70" onchange="updateMark(this)"/></td>
+      <td><input type="number" class="inp" style="width:60px;padding:5px 7px"
+            data-idx="${i}" data-field="mid" value="${mid}"
+            min="0" max="30" onchange="updateMark(this)"/></td>
+      <td><input type="number" class="inp" style="width:60px;padding:5px 7px"
+            data-idx="${i}" data-field="internal" value="${int_}"
+            min="0" max="25" onchange="updateMark(this)"/></td>
+      <td><input type="number" class="inp" style="width:60px;padding:5px 7px"
+            data-idx="${i}" data-field="viva" value="${viva}"
+            min="0" max="25" onchange="updateMark(this)"/></td>
+      <td><strong id="total_${i}">${total}</strong></td>
+      <td id="pct_${i}">${p}%</td>
+      <td><button class="btn bs bd" onclick="deleteStudent('${s.docId}',${i})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateMark(inp) {
+  const i = parseInt(inp.dataset.idx), f = inp.dataset.field;
+  loadedStudents[i][f] = parseInt(inp.value) || 0;
+  // Recalc row total and % live
+  const s     = loadedStudents[i];
+  const total = (s.ese_th||0) + (s.mid||0) + (s.internal||0) + (s.viva||0);
+  const p     = Math.round(total / 150 * 100);
+  const tEl   = document.getElementById('total_'+i);
+  const pEl   = document.getElementById('pct_'+i);
+  const bEl   = document.getElementById('grade_badge_'+i);
+  if (tEl) tEl.textContent = total;
+  if (pEl) pEl.textContent = p + '%';
+  if (f === 'ese_th' && bEl) {
+    const g = marksToGrade(s.ese_th);
+    bEl.textContent = g;
+    bEl.className = 'badge ' + gradeBadgeClass(g);
+  }
+}
+
+// ── Paste ESE grades and apply ──
+function applyEseGrades() {
+  const raw = document.getElementById('esePasteArea').value.trim();
+  if (!raw) { toast('Nothing pasted', 'error'); return; }
+  const grades = raw.split(/
+?
+/).map(l => l.trim()).filter(Boolean);
+  if (grades.length !== loadedStudents.length) {
+    const msg = `⚠️ Grade count (${grades.length}) does not match student count (${loadedStudents.length}). Please check your paste — one grade per line.`;
+    document.getElementById('eseApplyStatus').innerHTML = `<div class="alert warn">${msg}</div>`;
+    toast(msg, 'error'); return;
+  }
+  grades.forEach((g, i) => {
+    const marks = gradeToMarks(g);
+    loadedStudents[i].ese_th = marks;
+  });
+  renderMarksTable();
+  const converted = grades.map((g,i) => `${g}→${loadedStudents[i].ese_th}`).slice(0,5).join(', ');
+  document.getElementById('eseApplyStatus').innerHTML =
+    `<div class="alert success">✅ Applied ${grades.length} grades. Preview: ${converted}${grades.length>5?'…':''}<br>Click <strong>💾 Save All</strong> to save to database.</div>`;
+  toast(`${grades.length} ESE grades applied! Save to confirm.`, 'success');
+}
+
+function toggleEsePanel() {
+  const body = document.getElementById('esePanelBody');
+  const btn  = document.querySelector('#esePastePanel button');
+  const hidden = body.style.display === 'none';
+  body.style.display = hidden ? '' : 'none';
+  btn.textContent = hidden ? '▲ Collapse' : '▼ Expand ESE Grade Paste';
+}
+
+async function saveAllMarks() {
+  const subId = document.getElementById('markSubjectSel').value;
+  if (!subId || !loadedStudents.length) { toast('No marks to save', 'error'); return; }
+  try {
+    await Promise.all(loadedStudents.map(s =>
+      db.collection('subjects').doc(subId).collection('students').doc(s.docId).update({
+        ese_th:   s.ese_th   || 0,
+        mid:      s.mid      || 0,
+        internal: s.internal || 0,
+        viva:     s.viva     || 0
+      })
+    ));
+    toast('All marks saved!', 'success');
+    await calculateDirectAttainment(subId);
+  } catch(e) {
+    toast('Save error: ' + e.message, 'error');
+  }
+}
+
+async function deleteStudent(docId, idx) {
+  if (!confirm('Delete this student record?')) return;
+  const subId = document.getElementById('markSubjectSel').value;
+  await db.collection('subjects').doc(subId).collection('students').doc(docId).delete();
+  loadedStudents.splice(idx,1);
+  renderMarksTable();
+  toast('Student deleted','info');
+}
+
+async function saveManualStudent() {
+  const subId = document.getElementById('markSubjectSel').value;
+  if (!subId) { toast('Select a subject first','error'); return; }
+  const enr  = document.getElementById('mStuEnr').value.trim();
+  const name = document.getElementById('mStuName').value.trim().toUpperCase();
+  if (!enr || !name) { toast('Enrollment and Name are required','error'); return; }
+  const sr = loadedStudents.length + 1;
+  const data = {
+    enr, name, sr,
+    mid: parseInt(document.getElementById('mStuMid').value)||0,
+    internal: parseInt(document.getElementById('mStuInt').value)||0,
+    viva: parseInt(document.getElementById('mStuViva').value)||0
+  };
+  try {
+    const ref = await db.collection('subjects').doc(subId).collection('students').doc(enr).set(data, {merge:true});
+    loadedStudents.push({ docId: enr, ...data });
+    renderMarksTable();
+    closeModal('modalAddStudent');
+    ['mStuEnr','mStuName','mStuMid','mStuInt','mStuViva'].forEach(id => document.getElementById(id).value='');
+    toast('Student added!','success');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════
+//  GTU PARSE
+// ════════════════════════════════════════════
+function parseGTUFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    parsedStudents = [];
+    const lines = text.split(/\r?\n/);
+    let sr = 1;
+    lines.forEach(line => {
+      const m = line.match(/(\d+)\s+(2\d{12})\s+(.+?)\s+(\d+)\s+(-|\d+)\s+(\d+)\s+(\d+)/);
+      if (m) {
+        parsedStudents.push({ sr: sr++, enr: m[2].trim(), name: m[3].trim().toUpperCase(),
+          mid: parseInt(m[4])||0, remMid: m[5]==='-'?0:parseInt(m[5]), internal: parseInt(m[6])||0, viva: parseInt(m[7])||0 });
+      }
+    });
+    const msg = document.getElementById('uploadMsg');
+    const status = document.getElementById('uploadStatus');
+    if (parsedStudents.length) {
+      msg.textContent = `✅ Parsed successfully! ${parsedStudents.length} student records found.`;
+      msg.className = 'alert success';
+      status.style.display = '';
+      showParsedPreview();
+    } else {
+      msg.textContent = '⚠️ No valid student records found. Please check the file format.';
+      msg.className = 'alert warn';
+      status.style.display = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function showParsedPreview() {
+  const div = document.getElementById('uploadPreview');
+  const preview = parsedStudents.slice(0,5);
+  div.innerHTML = `<div class="alert success">Found ${parsedStudents.length} students</div>
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>Enrollment</th><th>Name</th><th>Mid</th><th>Internal</th><th>Viva</th></tr></thead>
+      <tbody>${preview.map(s=>`<tr><td>${s.sr}</td><td style="font-size:11px">${s.enr}</td><td>${s.name}</td><td>${s.mid}</td><td>${s.internal}</td><td>${s.viva}</td></tr>`).join('')}</tbody>
+    </table></div>
+    ${parsedStudents.length>5?`<p style="font-size:12px;color:var(--muted);margin-top:8px;">…and ${parsedStudents.length-5} more students</p>`:''}`;
+}
+
+async function saveUploadedMarks() {
+  const subId = document.getElementById('uploadSubjectSel').value;
+  if (!subId || !parsedStudents.length) { toast('Nothing to save','error'); return; }
+  await Promise.all(parsedStudents.map(s =>
+    db.collection('subjects').doc(subId).collection('students').doc(s.enr).set(s, { merge: true })
+  ));
+  await calculateDirectAttainment(subId);
+  toast(`${parsedStudents.length} student records saved to Firestore!`,'success');
+  navigate('marksEntry');
+  document.getElementById('markSubjectSel').value = subId;
+  loadMarksTable();
+}
+
+// ════════════════════════════════════════════
+//  CO ATTAINMENT CALCULATION
+// ════════════════════════════════════════════
+async function calculateDirectAttainment(subId) {
+  const [stuSnap, coSnap] = await Promise.all([
+    db.collection('subjects').doc(subId).collection('students').get(),
+    db.collection('subjects').doc(subId).collection('cos').get()
+  ]);
+  const students = stuSnap.docs.map(d => d.data());
+  const cos = coSnap.docs.map(d => d.data());
+  const total = students.length;
+  if (!total) return;
+
+  // Attainment thresholds per component (>=50% of max = passing)
+  // CO mapping: CO1,CO6 → Viva  |  CO2,CO3 → Mid  |  CO4,CO5 → Internal  |  ESE_TH → overall
+  const attainment = {};
+  cos.forEach((co, i) => {
+    let passing = 0;
+    if (i === 0 || i === 5) {
+      // CO1, CO6 mapped to Viva (/25)
+      passing = students.filter(s => (s.viva||0) >= 12.5).length;
+    } else if (i === 1 || i === 2) {
+      // CO2, CO3 mapped to Mid (/30)
+      passing = students.filter(s => (s.mid||0) >= 15).length;
+    } else if (i === 3 || i === 4) {
+      // CO4, CO5 mapped to Internal (/25)
+      passing = students.filter(s => (s.internal||0) >= 12.5).length;
+    }
+    // Also factor in ESE_TH: if ese_th available, use overall total >=50% as secondary check
+    const overallPassing = students.filter(s => {
+      const t = (s.ese_th||0) + (s.mid||0) + (s.internal||0) + (s.viva||0);
+      return t / 150 * 100 >= 50;
+    }).length;
+    // Use average of component-based and overall
+    const combinedPassing = Math.round((passing + overallPassing) / 2);
+    const pct = Math.round(combinedPassing / total * 100);
+    attainment[co.id] = { pct, passing: combinedPassing, total, level: pct>=70?3:pct>=60?2:1 };
+  });
+  await db.collection('subjects').doc(subId).collection('attainment').doc('direct').set(attainment);
+}
+
+async function loadCOAttainment() {
+  const subId = document.getElementById('coSubjectSel').value;
+  if (!subId) return;
+  activeSubjectId = subId;
+  const [coSnap, attSnap, cfgSnap] = await Promise.all([
+    db.collection('subjects').doc(subId).collection('cos').orderBy('id').get(),
+    db.collection('subjects').doc(subId).collection('attainment').doc('direct').get(),
+    db.collection('subjects').doc(subId).collection('config').doc('copo').get()
+  ]);
+  const cos = coSnap.docs.map(d => d.data());
+  const att = attSnap.exists ? attSnap.data() : {};
+  const cfg = cfgSnap.exists ? cfgSnap.data() : { weights:{direct:80,indirect:20} };
+
+  // Direct bars
+  const barsEl = document.getElementById('coDirectBars');
+  barsEl.innerHTML = cos.map(co => {
+    const p = att[co.id]?.pct||0;
+    const cls = p>=70?'bh':p>=60?'bm':'bl';
+    return `<div class="co-bar"><div class="co-bar-h"><span><strong>${co.id}</strong> (${co.bloom})</span><span style="font-weight:600">${p}%</span></div>
+      <div class="co-bar-track"><div class="co-bar-fill ${cls}" style="width:${p}%"></div></div></div>`;
+  }).join('');
+
+  // Target table
+  document.getElementById('coTargetTbl').innerHTML = cos.map(co => {
+    const p = att[co.id]?.pct||0, t = co.target||60, met = p>=t;
+    return `<tr><td><strong>${co.id}</strong></td><td>${p}%</td><td>${t}%</td>
+      <td>${p>=70?3:p>=60?2:1}</td>
+      <td><span class="badge ${met?'h':'l'}">${met?'✓ Met':'✗ Not Met'}</span></td></tr>`;
+  }).join('');
+
+  // Q-CO map
+  document.getElementById('coQMapTbl').innerHTML = [
+    {q:'Mid Exam',marks:30,cos:'CO2, CO3',bloom:'C/A'},
+    {q:'Internal',marks:25,cos:'CO4, CO5',bloom:'A'},
+    {q:'Viva',marks:25,cos:'CO1, CO6',bloom:'U'},
+  ].map(r=>`<tr><td>${r.q}</td><td>${r.marks}</td><td>${r.cos.split(',').map(c=>`<span class="pill">${c.trim()}</span>`).join('')}</td><td>${r.bloom}</td></tr>`).join('');
+
+  // Indirect form
+  const indSnap = await db.collection('subjects').doc(subId).collection('attainment').doc('indirect').get();
+  const ind = indSnap.exists ? indSnap.data() : {};
+  document.getElementById('indirectForm').innerHTML = cos.map(co => {
+    const v = ind[co.id]?.pct||0;
+    return `<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+      <span style="width:50px;font-weight:500;font-size:13px;">${co.id}</span>
+      <input type="range" min="0" max="100" value="${v}" step="5" style="flex:1"
+        oninput="this.nextElementSibling.textContent=this.value+'%'" data-co="${co.id}"/>
+      <span style="width:45px;text-align:right;font-weight:600;color:var(--teal)">${v}%</span>
+    </div>`;
+  }).join('');
+
+  // Final table
+  document.getElementById('finalCOTbl').innerHTML = cos.map(co => {
+    const d = att[co.id]?.pct||0, i2 = ind[co.id]?.pct||0;
+    const dw = cfg.weights?.direct||80, iw = cfg.weights?.indirect||20;
+    const fin = Math.round(d*dw/100 + i2*iw/100);
+    const lvl = fin>=70?3:fin>=60?2:1, t = co.target||60;
+    return `<tr><td><strong>${co.id}</strong></td>
+      <td style="font-size:12px;color:var(--muted);max-width:200px">${co.stmt}</td>
+      <td>${d}%</td><td>${i2}%</td><td><strong>${fin}%</strong></td><td>${lvl}</td>
+      <td><span class="badge ${fin>=t?'h':'l'}">${fin>=t?'✓':'✗'}</span></td></tr>`;
+  }).join('');
+}
+
+async function saveIndirectAttainment() {
+  const subId = document.getElementById('coSubjectSel').value;
+  if (!subId) return;
+  const sliders = document.querySelectorAll('#indirectForm input[type=range]');
+  const data = {};
+  sliders.forEach(s => { data[s.dataset.co] = { pct: parseInt(s.value) }; });
+  await db.collection('subjects').doc(subId).collection('attainment').doc('indirect').set(data);
+  toast('Indirect attainment saved!','success');
+  loadCOAttainment();
+}
+
+async function saveFinalAttainment() {
+  const subId = document.getElementById('coSubjectSel').value;
+  if (!subId) return;
+  const rows = document.querySelectorAll('#finalCOTbl tr');
+  const data = {};
+  rows.forEach(r => {
+    const cells = r.querySelectorAll('td');
+    if (!cells.length) return;
+    const coId = cells[0].textContent.trim();
+    data[coId] = { direct: parseInt(cells[2])||0, indirect: parseInt(cells[3])||0, final: parseInt(cells[4])||0 };
+  });
+  await db.collection('subjects').doc(subId).collection('attainment').doc('final').set(data);
+  toast('Final attainment saved!','success');
+}
+
+// ════════════════════════════════════════════
+//  CO-PO ATTAINMENT
+// ════════════════════════════════════════════
+async function loadPOAttainment() {
+  const subId = document.getElementById('poSubjectSel').value;
+  if (!subId) return;
+  const [coSnap, attSnap, cfgSnap] = await Promise.all([
+    db.collection('subjects').doc(subId).collection('cos').orderBy('id').get(),
+    db.collection('subjects').doc(subId).collection('attainment').doc('direct').get(),
+    db.collection('subjects').doc(subId).collection('config').doc('copo').get()
+  ]);
+  const cos = coSnap.docs.map(d => d.data());
+  const att = attSnap.exists ? attSnap.data() : {};
+  const matrix = cfgSnap.exists ? cfgSnap.data().matrix : DEFAULT_CO_PO;
+
+  // Heatmap
+  const tbl = document.getElementById('coPOMatrixTbl');
+  let html = '<thead><tr><th>CO / PO</th>'+PO_LABELS.map(p=>`<th>${p}</th>`).join('')+'</tr></thead><tbody>';
+  cos.forEach((co,i) => {
+    const row = matrix[i]||Array(9).fill(0);
+    html += `<tr><td style="font-weight:600">${co.id}</td>${row.map(v=>`<td class="${v===3?'h3':v===2?'h2':v===1?'h1':'h0'}">${v||'–'}</td>`).join('')}</tr>`;
+  });
+  tbl.innerHTML = html+'</tbody>';
+
+  // Calculate PO attainment
+  const coAtts = cos.map(co => (att[co.id]?.pct||0)/100*3);
+  const poVals = PO_LABELS.map((_,j) => {
+    const rows = (matrix||[]).map((row,i) => row[j]>0 ? coAtts[i]*row[j] : null).filter(v=>v!==null);
+    return rows.length ? rows.reduce((a,b)=>a+b,0)/rows.length : 0;
+  });
+
+  document.getElementById('poAttTbl').innerHTML = PO_LABELS.map((po,i) => {
+    const v = poVals[i], p = Math.round(v/3*100);
+    return `<tr><td><strong>${po}</strong></td><td>${v.toFixed(2)}</td><td>3.00</td>
+      <td><span class="badge ${p>=70?'h':p>=50?'m':'l'}">${p}%</span></td></tr>`;
+  }).join('');
+
+  document.getElementById('poBarsContainer').innerHTML = PO_LABELS.map((po,i) => {
+    const p = Math.round(poVals[i]/3*100), cls = p>=70?'bh':p>=50?'bm':'bl';
+    return `<div class="co-bar"><div class="co-bar-h"><span><strong>${po}</strong></span><span style="font-weight:600">${p}%</span></div>
+      <div class="co-bar-track"><div class="co-bar-fill ${cls}" style="width:${p}%"></div></div></div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+//  REPORTS
+// ════════════════════════════════════════════
+async function loadReport() {
+  const subId = document.getElementById('reportSubjectSel').value;
+  if (!subId) return;
+  const [coSnap, attSnap, indSnap, cfgSnap] = await Promise.all([
+    db.collection('subjects').doc(subId).collection('cos').orderBy('id').get(),
+    db.collection('subjects').doc(subId).collection('attainment').doc('direct').get(),
+    db.collection('subjects').doc(subId).collection('attainment').doc('indirect').get(),
+    db.collection('subjects').doc(subId).collection('config').doc('copo').get()
+  ]);
+  const cos = coSnap.docs.map(d=>d.data());
+  const att = attSnap.exists ? attSnap.data():{};
+  const ind = indSnap.exists ? indSnap.data():{};
+  const cfg = cfgSnap.exists ? cfgSnap.data():{weights:{direct:80,indirect:20}};
+  const dw = cfg.weights?.direct||80, iw = cfg.weights?.indirect||20;
+
+  document.getElementById('reportSummaryTbl').innerHTML = cos.map(co => {
+    const d=att[co.id]?.pct||0, i2=ind[co.id]?.pct||0;
+    const fin = Math.round(d*dw/100+i2*iw/100), t=co.target||60, lvl=fin>=70?3:fin>=60?2:1;
+    return `<tr><td><strong>${co.id}</strong></td>
+      <td style="font-size:12px;color:var(--muted)">${co.stmt}</td>
+      <td>${d}%</td><td>${i2}%</td><td><strong>${fin}%</strong></td><td>${lvl}</td><td>${t}%</td>
+      <td><span class="badge ${fin>=t?'h':'l'}">${fin>=t?'✓ Met':'✗ Not Met'}</span></td></tr>`;
+  }).join('');
+}
+
+function generateReport(type) {
+  toast('Generating PDF report... (Print dialog will open)','info');
+  setTimeout(() => window.print(), 500);
+}
+
+async function exportMarksCSV() {
+  const subId = document.getElementById('reportSubjectSel').value;
+  if (!subId) { toast('Select a subject','error'); return; }
+  const snap = await db.collection('subjects').doc(subId).collection('students').orderBy('sr').get();
+  const rows = snap.docs.map(d=>d.data());
+  const csv = ['Sr,Enrollment,Name,Mid(/30),Internal(/25),Viva(/25),Total,Pct'].concat(
+    rows.map(s=>{const t=(s.mid||0)+(s.internal||0)+(s.viva||0),p=Math.round(((s.mid||0)/30+(s.internal||0)/25+(s.viva||0)/25)/3*100);return `${s.sr},${s.enr},"${s.name}",${s.mid||0},${s.internal||0},${s.viva||0},${t},${p}%`;})
+  ).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download = 'marks_export.csv'; a.click();
+  toast('CSV downloaded!','success');
+}
+
+// ════════════════════════════════════════════
+//  SETUP
+// ════════════════════════════════════════════
+async function loadSetupSubject() {
+  const subId = document.getElementById('setupSubjectSel').value;
+  if (!subId) return;
+  const [coSnap, cfgSnap] = await Promise.all([
+    db.collection('subjects').doc(subId).collection('cos').orderBy('id').get(),
+    db.collection('subjects').doc(subId).collection('config').doc('copo').get()
+  ]);
+  const cos = coSnap.docs.map(d=>({docId:d.id,...d.data()}));
+  const matrix = cfgSnap.exists ? cfgSnap.data().matrix : DEFAULT_CO_PO;
+  const weights = cfgSnap.exists ? cfgSnap.data().weights : {direct:80,indirect:20};
+
+  // CO list
+  document.getElementById('coSetupList').innerHTML = cos.map((co,i) => `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start">
+      <div style="background:var(--teal);color:#fff;padding:3px 10px;border-radius:6px;font-weight:600;font-size:12px;white-space:nowrap">${co.id}</div>
+      <div style="flex:1">
+        <input class="inp" style="margin-bottom:8px" value="${co.stmt||''}" id="co_stmt_${i}" placeholder="CO Statement"/>
+        <div style="display:flex;gap:8px">
+          <select class="inp" style="width:200px" id="co_bloom_${i}">
+            ${['R','U','A','AN','E','C'].map(b=>`<option ${co.bloom===b?'selected':''}>${b}</option>`).join('')}
+          </select>
+          <input class="inp" type="number" style="width:90px" value="${co.target||60}" id="co_target_${i}" placeholder="Target%"/>
+        </div>
+      </div>
+    </div>`).join('');
+
+  // Editable CO-PO matrix
+  const tbl = document.getElementById('editCOPOTbl');
+  let html = '<thead><tr><th>CO/PO</th>'+PO_LABELS.map(p=>`<th>${p}</th>`).join('')+'</tr></thead><tbody>';
+  cos.forEach((co,i) => {
+    const row = matrix[i]||Array(9).fill(0);
+    html += `<tr><td style="font-weight:600">${co.id}</td>${row.map((v,j)=>`<td class="${v===3?'h3':v===2?'h2':v===1?'h1':'h0'}"><select onchange="this.closest('td').className=(['h0','h1','h2','h3'])[this.value];this.style.fontWeight=this.value>0?'600':'400'" style="border:none;background:transparent;cursor:pointer;font-weight:${v>0?'600':'400'};width:100%" data-i="${i}" data-j="${j}">
+      <option ${v===0?'selected':''} value="0">0</option><option ${v===1?'selected':''} value="1">1</option>
+      <option ${v===2?'selected':''} value="2">2</option><option ${v===3?'selected':''} value="3">3</option>
+    </select></td>`).join('')}</tr>`;
+  });
+  tbl.innerHTML = html+'</tbody>';
+
+  // Targets
+  document.getElementById('targetSetupList').innerHTML = cos.map((co,i)=>`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+      <span style="width:50px;font-weight:600;font-size:13px">${co.id}</span>
+      <span style="flex:1;font-size:13px;color:var(--muted)">${co.stmt||''}</span>
+      <input type="number" class="inp" value="${co.target||60}" style="width:80px" id="tgt_${i}" min="0" max="100"/>
+      <span style="color:var(--muted);font-size:13px">%</span>
+    </div>`).join('');
+
+  document.getElementById('directW').value = weights.direct||80;
+  document.getElementById('indirectW').value = weights.indirect||20;
+  window._setupCos = cos;
+}
+
+async function saveCOs() {
+  const subId = document.getElementById('setupSubjectSel').value;
+  const cos = window._setupCos||[];
+  await Promise.all(cos.map((co,i) =>
+    db.collection('subjects').doc(subId).collection('cos').doc(co.id).update({
+      stmt: document.getElementById(`co_stmt_${i}`)?.value||co.stmt,
+      bloom: document.getElementById(`co_bloom_${i}`)?.value||co.bloom,
+      target: parseInt(document.getElementById(`co_target_${i}`)?.value)||co.target
+    })
+  ));
+  toast('COs saved!','success');
+}
+
+function addCORow() {
+  toast('Save existing COs first, then add via Firestore console or contact HOD.','info');
+}
+
+async function saveCOPOMatrix() {
+  const subId = document.getElementById('setupSubjectSel').value;
+  const selects = document.querySelectorAll('#editCOPOTbl select');
+  const matrix = Array.from({length:6},()=>Array(9).fill(0));
+  selects.forEach(s => {
+    const i=parseInt(s.dataset.i), j=parseInt(s.dataset.j);
+    if(!isNaN(i)&&!isNaN(j)) matrix[i][j] = parseInt(s.value)||0;
+  });
+  await db.collection('subjects').doc(subId).collection('config').doc('copo').update({ matrix });
+  toast('CO-PO matrix saved!','success');
+}
+
+async function saveTargets() {
+  const subId = document.getElementById('setupSubjectSel').value;
+  const cos = window._setupCos||[];
+  const dw = parseInt(document.getElementById('directW').value)||80;
+  const iw = parseInt(document.getElementById('indirectW').value)||20;
+  await Promise.all([
+    ...cos.map((co,i) =>
+      db.collection('subjects').doc(subId).collection('cos').doc(co.id)
+        .update({ target: parseInt(document.getElementById(`tgt_${i}`)?.value)||60 })
+    ),
+    db.collection('subjects').doc(subId).collection('config').doc('copo')
+      .update({ weights:{direct:dw, indirect:iw} })
+  ]);
+  toast('Targets and weights saved!','success');
+}
+
+// ════════════════════════════════════════════
+//  USERS
+// ════════════════════════════════════════════
+async function loadUsers() {
+  const snap = await db.collection('users').get();
+  document.getElementById('usersTable').innerHTML = snap.docs.map((d,i) => {
+    const u=d.data();
+    return `<tr><td>${i+1}</td><td>${u.name||'–'}</td><td>${u.email||'–'}</td>
+      <td><span class="badge ${u.role==='hod'?'b':'g'}">${u.role==='hod'?'HOD':'Faculty'}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${u.createdAt?.toDate().toLocaleDateString('en-IN')||'–'}</td></tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+//  IMPORT – FILE / PASTE / MANUAL
+// ════════════════════════════════════════════
+
+function switchImportTab(btn, targetId) {
+  document.querySelectorAll('#importTabs .tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  ['import-file','import-paste','import-manual'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = id === targetId ? '' : 'none';
+  });
+}
+
+function handleFileDrop(e) {
+  const file = e.dataTransfer.files[0];
+  if (file) parseGTUFile(file);
+}
+
+// ── Load PDF.js from CDN ──
+function loadPDFJS() {
+  return new Promise((resolve, reject) => {
+    if (window.pdfjsLib) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = () => {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      resolve();
+    };
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+function loadJSZip() {
+  return new Promise((resolve, reject) => {
+    if (window.JSZip) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// ── Main dispatcher ──
+async function parseGTUFile(file) {
+  if (!file) return;
+  showUploadProgress(true, 'Reading file...');
+
+  try {
+    let text = '';
+    const isPDF = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+    const isZIP = file.name.toLowerCase().endsWith('.zip') || file.type.includes('zip');
+
+    if (isPDF) {
+      text = await extractTextFromPDF(file);
+    } else if (isZIP) {
+      await loadJSZip();
+      const zip = await JSZip.loadAsync(file);
+      const txtEntry = Object.values(zip.files).find(f => !f.dir &&
+        (f.name.endsWith('.txt') || f.name.endsWith('.TXT') || f.name.endsWith('.csv')));
+      if (!txtEntry) { showUploadError('No .txt file found inside ZIP.'); return; }
+      text = await txtEntry.async('text');
+    } else {
+      text = await file.text();
+    }
+
+    showUploadProgress(true, 'Parsing student records...');
+    const students = parseGTUText(text);
+
+    if (students.length) {
+      parsedStudents = students;
+      showUploadProgress(false);
+      showUploadSuccess(students.length);
+      showParsedPreview();
+    } else {
+      showUploadProgress(false);
+      showUploadError('No student records found in this file. Try the Copy-Paste tab — select all text from the PDF and paste it there.');
+    }
+  } catch(e) {
+    console.error('File parse error:', e);
+    showUploadProgress(false);
+    showUploadError('Could not read file: ' + e.message);
+  }
+}
+
+// ── PDF text extraction using PDF.js (handles multi-page) ──
+async function extractTextFromPDF(file) {
+  await loadPDFJS();
+  showUploadProgress(true, 'Loading PDF...');
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const totalPages = pdf.numPages;
+  let fullText = '';
+
+  for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+    showUploadProgress(true, `Reading page ${pageNum} of ${totalPages}...`, pageNum / totalPages * 100);
+    const page = await pdf.getPage(pageNum);
+    const textContent = await page.getTextContent();
+
+    // Sort items by Y then X position so reading order is correct
+    const items = textContent.items
+      .filter(item => item.str.trim())
+      .map(item => ({
+        str: item.str,
+        x: Math.round(item.transform[4]),
+        y: Math.round(item.transform[5])
+      }));
+
+    // Group items into rows by Y position (within 3px = same line)
+    const rows = [];
+    items.forEach(item => {
+      const existingRow = rows.find(r => Math.abs(r.y - item.y) <= 3);
+      if (existingRow) {
+        existingRow.items.push(item);
+      } else {
+        rows.push({ y: item.y, items: [item] });
+      }
+    });
+
+    // Sort rows top-to-bottom (PDF Y is bottom-up so sort descending)
+    rows.sort((a, b) => b.y - a.y);
+
+    // Within each row sort left-to-right
+    rows.forEach(row => {
+      row.items.sort((a, b) => a.x - b.x);
+      fullText += row.items.map(i => i.str).join('  ') + '\n';
+    });
+  }
+
+  return fullText;
+}
+
+// ── Core GTU text parser ──
+// Exact GTU format (12-digit enrollment, 4 mark columns):
+// "1 206150316067 THAKOR VRUSHTI DOLATSINH 9 - 12 12"
+// Works for both plain text and PDF.js extracted text
+function parseGTUText(text) {
+  const students = [];
+  let sr = 1;
+  const lines = text.split(/\r?\n/);
+
+  lines.forEach(line => {
+    // Normalize all whitespace (tabs, multiple spaces) to single space
+    const t = line.replace(/[\t]+/g, ' ').replace(/ {2,}/g, ' ').trim();
+    if (!t) return;
+
+    // Match: optional_sr  12digit_enrollment  name  mid  remMid_or_dash  internal  viva
+    // Enrollment is exactly 12 digits starting with 2
+    const m = t.match(/^\d{0,3}\s*?(\d{12})\s+(.+?)\s+(\d{1,2})\s+(-|\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s*$/);
+    if (m) {
+      students.push({
+        sr: sr++,
+        enr:      m[1],
+        name:     m[2].replace(/\s+/g, ' ').trim().toUpperCase(),
+        mid:      parseInt(m[3]) || 0,
+        remMid:   m[4] === '-' ? 0 : parseInt(m[4]) || 0,
+        internal: parseInt(m[5]) || 0,
+        viva:     parseInt(m[6]) || 0
+      });
+    }
+  });
+
+  return students;
+}
+function showUploadProgress(show, label = '', pct = 30) {
+  const el = document.getElementById('uploadProgress');
+  const bar = document.getElementById('uploadProgressBar');
+  const lbl = document.getElementById('uploadProgressLabel');
+  if (!el) return;
+  el.style.display = show ? '' : 'none';
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = label;
+  if (show) document.getElementById('uploadStatus').style.display = '';
+}
+
+function showUploadSuccess(count) {
+  document.getElementById('uploadMsg').textContent = `✅ Parsed ${count} student records successfully!`;
+  document.getElementById('uploadMsg').className = 'alert success';
+  document.getElementById('uploadStatus').style.display = '';
+}
+
+function showUploadError(msg) {
+  document.getElementById('uploadMsg').textContent = '⚠️ ' + msg;
+  document.getElementById('uploadMsg').className = 'alert warn';
+  document.getElementById('uploadStatus').style.display = '';
+}
+
+function showParsedPreview() {
+  const div = document.getElementById('uploadPreview');
+  const preview = parsedStudents.slice(0, 8);
+  div.innerHTML = `
+    <div class="alert success" style="margin-bottom:12px;">✅ ${parsedStudents.length} students ready to save</div>
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>Enrollment</th><th>Name</th><th>Mid</th><th>Int</th><th>Viva</th></tr></thead>
+      <tbody>${preview.map(s => `<tr>
+        <td>${s.sr}</td>
+        <td style="font-size:11px;font-family:monospace">${s.enr}</td>
+        <td>${s.name}</td>
+        <td>${s.mid}</td><td>${s.internal}</td><td>${s.viva}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+    ${parsedStudents.length > 8 ? `<p style="font-size:12px;color:var(--muted);margin-top:8px;">…and ${parsedStudents.length - 8} more</p>` : ''}`;
+}
+
+async function saveUploadedMarks() {
+  const subId = document.getElementById('uploadSubjectSel').value;
+  if (!subId) { toast('Please select a subject first', 'error'); return; }
+  if (!parsedStudents.length) { toast('No parsed data to save', 'error'); return; }
+  try {
+    await Promise.all(parsedStudents.map(s =>
+      db.collection('subjects').doc(subId).collection('students').doc(s.enr).set(s, { merge: true })
+    ));
+    await calculateDirectAttainment(subId);
+    toast(`${parsedStudents.length} students saved to database!`, 'success');
+    document.getElementById('markSubjectSel').value = subId;
+    navigate('marksEntry');
+    loadMarksTable();
+  } catch(e) {
+    toast('Save error: ' + e.message, 'error');
+  }
+}
+
+// ── PASTE PARSER ──
+function parsePastedData() {
+  const raw = document.getElementById('pasteArea').value.trim();
+  if (!raw) { toast('Nothing pasted yet', 'error'); return; }
+  const students = parseGTUText(raw);
+  if (!students.length) {
+    toast('Could not find any rows with 13-digit enrollment numbers. Make sure you copy the full table from GTU portal.', 'error');
+    return;
+  }
+  parsedStudents = students;
+  document.getElementById('pasteMsg').textContent = `✅ Parsed ${students.length} student records.`;
+  document.getElementById('pasteStatus').style.display = '';
+  document.getElementById('pastePreviewCard').style.display = '';
+
+  document.getElementById('pastePreviewBody').innerHTML = students.map(s => {
+    const t = s.mid + s.internal + s.viva;
+    return `<tr>
+      <td>${s.sr}</td>
+      <td style="font-size:11px;font-family:monospace">${s.enr}</td>
+      <td>${s.name}</td>
+      <td>${s.mid}</td><td>${s.internal}</td><td>${s.viva}</td>
+      <td><strong>${t}</strong></td>
+    </tr>`;
+  }).join('');
+}
+
+function saveParsedStudents() { saveUploadedMarks(); }
+
+// ── INLINE MANUAL ADD ──
+async function saveManualStudentInline() {
+  const subId = document.getElementById('uploadSubjectSel').value;
+  if (!subId) { toast('Select a subject first', 'error'); return; }
+  const enr  = document.getElementById('mStuEnr2').value.trim();
+  const name = document.getElementById('mStuName2').value.trim().toUpperCase();
+  if (!enr || !name) { toast('Enrollment and Name are required', 'error'); return; }
+  const data = {
+    enr, name, sr: Date.now(),
+    mid:      parseInt(document.getElementById('mStuMid2').value)  || 0,
+    internal: parseInt(document.getElementById('mStuInt2').value)  || 0,
+    viva:     parseInt(document.getElementById('mStuViva2').value) || 0,
+    remMid: 0
+  };
+  try {
+    await db.collection('subjects').doc(subId).collection('students').doc(enr).set(data, { merge: true });
+    toast(`${name} added!`, 'success');
+    ['mStuEnr2','mStuName2','mStuMid2','mStuInt2','mStuViva2'].forEach(id =>
+      document.getElementById(id).value = '');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════
+//  CO ATTAINMENT CALCULATION
+// ════════════════════════════════════════════
+async function calculateDirectAttainment(subId) {
+  const [stuSnap, coSnap] = await Promise.all([
+    db.collection('subjects').doc(subId).collection('students').get(),
+    db.collection('subjects').doc(subId).collection('cos').get()
+  ]);
+  const students = stuSnap.docs.map(d => d.data());
+  const cos = coSnap.docs.map(d => d.data());
+  const total = students.length;
+  if (!total) return;
+
+  // Attainment thresholds per component (>=50% of max = passing)
+  // CO mapping: CO1,CO6 → Viva  |  CO2,CO3 → Mid  |  CO4,CO5 → Internal  |  ESE_TH → overall
+  const attainment = {};
+  cos.forEach((co, i) => {
+    let passing = 0;
+    if (i === 0 || i === 5) {
+      // CO1, CO6 mapped to Viva (/25)
+      passing = students.filter(s => (s.viva||0) >= 12.5).length;
+    } else if (i === 1 || i === 2) {
+      // CO2, CO3 mapped to Mid (/30)
+      passing = students.filter(s => (s.mid||0) >= 15).length;
+    } else if (i === 3 || i === 4) {
+      // CO4, CO5 mapped to Internal (/25)
+      passing = students.filter(s => (s.internal||0) >= 12.5).length;
+    }
+    // Also factor in ESE_TH: if ese_th available, use overall total >=50% as secondary check
+    const overallPassing = students.filter(s => {
+      const t = (s.ese_th||0) + (s.mid||0) + (s.internal||0) + (s.viva||0);
+      return t / 150 * 100 >= 50;
+    }).length;
+    // Use average of component-based and overall
+    const combinedPassing = Math.round((passing + overallPassing) / 2);
+    const pct = Math.round(combinedPassing / total * 100);
+    attainment[co.id] = { pct, passing: combinedPassing, total, level: pct>=70?3:pct>=60?2:1 };
+  });
+  await db.collection('subjects').doc(subId).collection('attainment').doc('direct').set(attainment);
+}
+
+async function loadCOAttainment() {
+  const subId = document.getElementById('coSubjectSel').value;
+  if (!subId) return;
+  activeSubjectId = subId;
+  const [coSnap, attSnap, cfgSnap] = await Promise.all([
+    db.collection('subjects').doc(subId).collection('cos').orderBy('id').get(),
+    db.collection('subjects').doc(subId).collection('attainment').doc('direct').get(),
+    db.collection('subjects').doc(subId).collection('config').doc('copo').get()
+  ]);
+  const cos = coSnap.docs.map(d => d.data());
+  const att = attSnap.exists ? attSnap.data() : {};
+  const cfg = cfgSnap.exists ? cfgSnap.data() : { weights:{direct:80,indirect:20} };
+
+  // Direct bars
+  const barsEl = document.getElementById('coDirectBars');
+  barsEl.innerHTML = cos.map(co => {
+    const p = att[co.id]?.pct||0;
+    const cls = p>=70?'bh':p>=60?'bm':'bl';
+    return `<div class="co-bar"><div class="co-bar-h"><span><strong>${co.id}</strong> (${co.bloom})</span><span style="font-weight:600">${p}%</span></div>
+      <div class="co-bar-track"><div class="co-bar-fill ${cls}" style="width:${p}%"></div></div></div>`;
+  }).join('');
+
+  // Target table
+  document.getElementById('coTargetTbl').innerHTML = cos.map(co => {
+    const p = att[co.id]?.pct||0, t = co.target||60, met = p>=t;
+    return `<tr><td><strong>${co.id}</strong></td><td>${p}%</td><td>${t}%</td>
+      <td>${p>=70?3:p>=60?2:1}</td>
+      <td><span class="badge ${met?'h':'l'}">${met?'✓ Met':'✗ Not Met'}</span></td></tr>`;
+  }).join('');
+
+  // Q-CO map
+  document.getElementById('coQMapTbl').innerHTML = [
+    {q:'Mid Exam',marks:30,cos:'CO2, CO3',bloom:'C/A'},
+    {q:'Internal',marks:25,cos:'CO4, CO5',bloom:'A'},
+    {q:'Viva',marks:25,cos:'CO1, CO6',bloom:'U'},
+  ].map(r=>`<tr><td>${r.q}</td><td>${r.marks}</td><td>${r.cos.split(',').map(c=>`<span class="pill">${c.trim()}</span>`).join('')}</td><td>${r.bloom}</td></tr>`).join('');
+
+  // Indirect form
+  const indSnap = await db.collection('subjects').doc(subId).collection('attainment').doc('indirect').get();
+  const ind = indSnap.exists ? indSnap.data() : {};
+  document.getElementById('indirectForm').innerHTML = cos.map(co => {
+    const v = ind[co.id]?.pct||0;
+    return `<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+      <span style="width:50px;font-weight:500;font-size:13px;">${co.id}</span>
+      <input type="range" min="0" max="100" value="${v}" step="5" style="flex:1"
+        oninput="this.nextElementSibling.textContent=this.value+'%'" data-co="${co.id}"/>
+      <span style="width:45px;text-align:right;font-weight:600;color:var(--teal)">${v}%</span>
+    </div>`;
+  }).join('');
+
+  // Final table
+  document.getElementById('finalCOTbl').innerHTML = cos.map(co => {
+    const d = att[co.id]?.pct||0, i2 = ind[co.id]?.pct||0;
+    const dw = cfg.weights?.direct||80, iw = cfg.weights?.indirect||20;
+    const fin = Math.round(d*dw/100 + i2*iw/100);
+    const lvl = fin>=70?3:fin>=60?2:1, t = co.target||60;
+    return `<tr><td><strong>${co.id}</strong></td>
+      <td style="font-size:12px;color:var(--muted);max-width:200px">${co.stmt}</td>
+      <td>${d}%</td><td>${i2}%</td><td><strong>${fin}%</strong></td><td>${lvl}</td>
+      <td><span class="badge ${fin>=t?'h':'l'}">${fin>=t?'✓':'✗'}</span></td></tr>`;
+  }).join('');
+}
+
+async function saveIndirectAttainment() {
+  const subId = document.getElementById('coSubjectSel').value;
+  if (!subId) return;
+  const sliders = document.querySelectorAll('#indirectForm input[type=range]');
+  const data = {};
+  sliders.forEach(s => { data[s.dataset.co] = { pct: parseInt(s.value) }; });
+  await db.collection('subjects').doc(subId).collection('attainment').doc('indirect').set(data);
+  toast('Indirect attainment saved!','success');
+  loadCOAttainment();
+}
+
+async function saveFinalAttainment() {
+  const subId = document.getElementById('coSubjectSel').value;
+  if (!subId) return;
+  const rows = document.querySelectorAll('#finalCOTbl tr');
+  const data = {};
+  rows.forEach(r => {
+    const cells = r.querySelectorAll('td');
+    if (!cells.length) return;
+    const coId = cells[0].textContent.trim();
+    data[coId] = { direct: parseInt(cells[2])||0, indirect: parseInt(cells[3])||0, final: parseInt(cells[4])||0 };
+  });
+  await db.collection('subjects').doc(subId).collection('attainment').doc('final').set(data);
+  toast('Final attainment saved!','success');
+}
+
+// ════════════════════════════════════════════
+//  CO-PO ATTAINMENT
+// ════════════════════════════════════════════
+async function loadPOAttainment() {
+  const subId = document.getElementById('poSubjectSel').value;
+  if (!subId) return;
+  const [coSnap, attSnap, cfgSnap] = await Promise.all([
+    db.collection('subjects').doc(subId).collection('cos').orderBy('id').get(),
+    db.collection('subjects').doc(subId).collection('attainment').doc('direct').get(),
+    db.collection('subjects').doc(subId).collection('config').doc('copo').get()
+  ]);
+  const cos = coSnap.docs.map(d => d.data());
+  const att = attSnap.exists ? attSnap.data() : {};
+  const matrix = cfgSnap.exists ? cfgSnap.data().matrix : DEFAULT_CO_PO;
+
+  // Heatmap
+  const tbl = document.getElementById('coPOMatrixTbl');
+  let html = '<thead><tr><th>CO / PO</th>'+PO_LABELS.map(p=>`<th>${p}</th>`).join('')+'</tr></thead><tbody>';
+  cos.forEach((co,i) => {
+    const row = matrix[i]||Array(9).fill(0);
+    html += `<tr><td style="font-weight:600">${co.id}</td>${row.map(v=>`<td class="${v===3?'h3':v===2?'h2':v===1?'h1':'h0'}">${v||'–'}</td>`).join('')}</tr>`;
+  });
+  tbl.innerHTML = html+'</tbody>';
+
+  // Calculate PO attainment
+  const coAtts = cos.map(co => (att[co.id]?.pct||0)/100*3);
+  const poVals = PO_LABELS.map((_,j) => {
+    const rows = (matrix||[]).map((row,i) => row[j]>0 ? coAtts[i]*row[j] : null).filter(v=>v!==null);
+    return rows.length ? rows.reduce((a,b)=>a+b,0)/rows.length : 0;
+  });
+
+  document.getElementById('poAttTbl').innerHTML = PO_LABELS.map((po,i) => {
+    const v = poVals[i], p = Math.round(v/3*100);
+    return `<tr><td><strong>${po}</strong></td><td>${v.toFixed(2)}</td><td>3.00</td>
+      <td><span class="badge ${p>=70?'h':p>=50?'m':'l'}">${p}%</span></td></tr>`;
+  }).join('');
+
+  document.getElementById('poBarsContainer').innerHTML = PO_LABELS.map((po,i) => {
+    const p = Math.round(poVals[i]/3*100), cls = p>=70?'bh':p>=50?'bm':'bl';
+    return `<div class="co-bar"><div class="co-bar-h"><span><strong>${po}</strong></span><span style="font-weight:600">${p}%</span></div>
+      <div class="co-bar-track"><div class="co-bar-fill ${cls}" style="width:${p}%"></div></div></div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+//  REPORTS
+// ════════════════════════════════════════════
+async function loadReport() {
+  const subId = document.getElementById('reportSubjectSel').value;
+  if (!subId) return;
+  const [coSnap, attSnap, indSnap, cfgSnap] = await Promise.all([
+    db.collection('subjects').doc(subId).collection('cos').orderBy('id').get(),
+    db.collection('subjects').doc(subId).collection('attainment').doc('direct').get(),
+    db.collection('subjects').doc(subId).collection('attainment').doc('indirect').get(),
+    db.collection('subjects').doc(subId).collection('config').doc('copo').get()
+  ]);
+  const cos = coSnap.docs.map(d=>d.data());
+  const att = attSnap.exists ? attSnap.data():{};
+  const ind = indSnap.exists ? indSnap.data():{};
+  const cfg = cfgSnap.exists ? cfgSnap.data():{weights:{direct:80,indirect:20}};
+  const dw = cfg.weights?.direct||80, iw = cfg.weights?.indirect||20;
+
+  document.getElementById('reportSummaryTbl').innerHTML = cos.map(co => {
+    const d=att[co.id]?.pct||0, i2=ind[co.id]?.pct||0;
+    const fin = Math.round(d*dw/100+i2*iw/100), t=co.target||60, lvl=fin>=70?3:fin>=60?2:1;
+    return `<tr><td><strong>${co.id}</strong></td>
+      <td style="font-size:12px;color:var(--muted)">${co.stmt}</td>
+      <td>${d}%</td><td>${i2}%</td><td><strong>${fin}%</strong></td><td>${lvl}</td><td>${t}%</td>
+      <td><span class="badge ${fin>=t?'h':'l'}">${fin>=t?'✓ Met':'✗ Not Met'}</span></td></tr>`;
+  }).join('');
+}
+
+function generateReport(type) {
+  toast('Generating PDF report... (Print dialog will open)','info');
+  setTimeout(() => window.print(), 500);
+}
+
+async function exportMarksCSV() {
+  const subId = document.getElementById('reportSubjectSel').value;
+  if (!subId) { toast('Select a subject','error'); return; }
+  const snap = await db.collection('subjects').doc(subId).collection('students').orderBy('sr').get();
+  const rows = snap.docs.map(d=>d.data());
+  const csv = ['Sr,Enrollment,Name,Mid(/30),Internal(/25),Viva(/25),Total,Pct'].concat(
+    rows.map(s=>{const t=(s.mid||0)+(s.internal||0)+(s.viva||0),p=Math.round(((s.mid||0)/30+(s.internal||0)/25+(s.viva||0)/25)/3*100);return `${s.sr},${s.enr},"${s.name}",${s.mid||0},${s.internal||0},${s.viva||0},${t},${p}%`;})
+  ).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download = 'marks_export.csv'; a.click();
+  toast('CSV downloaded!','success');
+}
+
+// ════════════════════════════════════════════
+//  SETUP
+// ════════════════════════════════════════════
+async function loadSetupSubject() {
+  const subId = document.getElementById('setupSubjectSel').value;
+  if (!subId) return;
+  const [coSnap, cfgSnap] = await Promise.all([
+    db.collection('subjects').doc(subId).collection('cos').orderBy('id').get(),
+    db.collection('subjects').doc(subId).collection('config').doc('copo').get()
+  ]);
+  const cos = coSnap.docs.map(d=>({docId:d.id,...d.data()}));
+  const matrix = cfgSnap.exists ? cfgSnap.data().matrix : DEFAULT_CO_PO;
+  const weights = cfgSnap.exists ? cfgSnap.data().weights : {direct:80,indirect:20};
+
+  // CO list
+  document.getElementById('coSetupList').innerHTML = cos.map((co,i) => `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start">
+      <div style="background:var(--teal);color:#fff;padding:3px 10px;border-radius:6px;font-weight:600;font-size:12px;white-space:nowrap">${co.id}</div>
+      <div style="flex:1">
+        <input class="inp" style="margin-bottom:8px" value="${co.stmt||''}" id="co_stmt_${i}" placeholder="CO Statement"/>
+        <div style="display:flex;gap:8px">
+          <select class="inp" style="width:200px" id="co_bloom_${i}">
+            ${['R','U','A','AN','E','C'].map(b=>`<option ${co.bloom===b?'selected':''}>${b}</option>`).join('')}
+          </select>
+          <input class="inp" type="number" style="width:90px" value="${co.target||60}" id="co_target_${i}" placeholder="Target%"/>
+        </div>
+      </div>
+    </div>`).join('');
+
+  // Editable CO-PO matrix
+  const tbl = document.getElementById('editCOPOTbl');
+  let html = '<thead><tr><th>CO/PO</th>'+PO_LABELS.map(p=>`<th>${p}</th>`).join('')+'</tr></thead><tbody>';
+  cos.forEach((co,i) => {
+    const row = matrix[i]||Array(9).fill(0);
+    html += `<tr><td style="font-weight:600">${co.id}</td>${row.map((v,j)=>`<td class="${v===3?'h3':v===2?'h2':v===1?'h1':'h0'}"><select onchange="this.closest('td').className=(['h0','h1','h2','h3'])[this.value];this.style.fontWeight=this.value>0?'600':'400'" style="border:none;background:transparent;cursor:pointer;font-weight:${v>0?'600':'400'};width:100%" data-i="${i}" data-j="${j}">
+      <option ${v===0?'selected':''} value="0">0</option><option ${v===1?'selected':''} value="1">1</option>
+      <option ${v===2?'selected':''} value="2">2</option><option ${v===3?'selected':''} value="3">3</option>
+    </select></td>`).join('')}</tr>`;
+  });
+  tbl.innerHTML = html+'</tbody>';
+
+  // Targets
+  document.getElementById('targetSetupList').innerHTML = cos.map((co,i)=>`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+      <span style="width:50px;font-weight:600;font-size:13px">${co.id}</span>
+      <span style="flex:1;font-size:13px;color:var(--muted)">${co.stmt||''}</span>
+      <input type="number" class="inp" value="${co.target||60}" style="width:80px" id="tgt_${i}" min="0" max="100"/>
+      <span style="color:var(--muted);font-size:13px">%</span>
+    </div>`).join('');
+
+  document.getElementById('directW').value = weights.direct||80;
+  document.getElementById('indirectW').value = weights.indirect||20;
+  window._setupCos = cos;
+}
+
+async function saveCOs() {
+  const subId = document.getElementById('setupSubjectSel').value;
+  const cos = window._setupCos||[];
+  await Promise.all(cos.map((co,i) =>
+    db.collection('subjects').doc(subId).collection('cos').doc(co.id).update({
+      stmt: document.getElementById(`co_stmt_${i}`)?.value||co.stmt,
+      bloom: document.getElementById(`co_bloom_${i}`)?.value||co.bloom,
+      target: parseInt(document.getElementById(`co_target_${i}`)?.value)||co.target
+    })
+  ));
+  toast('COs saved!','success');
+}
+
+function addCORow() {
+  toast('Save existing COs first, then add via Firestore console or contact HOD.','info');
+}
+
+async function saveCOPOMatrix() {
+  const subId = document.getElementById('setupSubjectSel').value;
+  const selects = document.querySelectorAll('#editCOPOTbl select');
+  const matrix = Array.from({length:6},()=>Array(9).fill(0));
+  selects.forEach(s => {
+    const i=parseInt(s.dataset.i), j=parseInt(s.dataset.j);
+    if(!isNaN(i)&&!isNaN(j)) matrix[i][j] = parseInt(s.value)||0;
+  });
+  await db.collection('subjects').doc(subId).collection('config').doc('copo').update({ matrix });
+  toast('CO-PO matrix saved!','success');
+}
+
+async function saveTargets() {
+  const subId = document.getElementById('setupSubjectSel').value;
+  const cos = window._setupCos||[];
+  const dw = parseInt(document.getElementById('directW').value)||80;
+  const iw = parseInt(document.getElementById('indirectW').value)||20;
+  await Promise.all([
+    ...cos.map((co,i) =>
+      db.collection('subjects').doc(subId).collection('cos').doc(co.id)
+        .update({ target: parseInt(document.getElementById(`tgt_${i}`)?.value)||60 })
+    ),
+    db.collection('subjects').doc(subId).collection('config').doc('copo')
+      .update({ weights:{direct:dw, indirect:iw} })
+  ]);
+  toast('Targets and weights saved!','success');
+}
+
+// ════════════════════════════════════════════
+//  USERS
+// ════════════════════════════════════════════
+async function loadUsers() {
+  const snap = await db.collection('users').get();
+  document.getElementById('usersTable').innerHTML = snap.docs.map((d,i) => {
+    const u=d.data();
+    return `<tr><td>${i+1}</td><td>${u.name||'–'}</td><td>${u.email||'–'}</td>
+      <td><span class="badge ${u.role==='hod'?'b':'g'}">${u.role==='hod'?'HOD':'Faculty'}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${u.createdAt?.toDate().toLocaleDateString('en-IN')||'–'}</td></tr>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
